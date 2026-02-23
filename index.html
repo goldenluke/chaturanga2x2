@@ -3,119 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chaturanga 2x2 Online Mobile</title>
+    <title>Xadrez 2x2 Online - Tradicional</title>
     <style>
         :root {
-            --bg: #0f172a; --card: #1e293b;
-            --tile-l: #e2e8f0; --tile-d: #94a3b8;
-            --p0: #ef4444; --p1: #3b82f6; --p2: #f59e0b; --p3: #10b981;
+            --bg: #1e1e1e; --card: #2d2d2d;
+            --tile-l: #ebecd0; --tile-d: #779556;
+            --p0: #f1c40f; /* Amarelo (Norte) */
+            --p1: #2ecc71; /* Verde (Leste) */
+            --p2: #e74c3c; /* Vermelho (Sul) */
+            --p3: #3498db; /* Azul (Oeste) */
         }
-
         * { box-sizing: border-box; touch-action: manipulation; }
-
-        body {
-            font-family: 'Inter', sans-serif; background: var(--bg); color: white;
-            margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center;
-            overflow-x: hidden;
+        body { 
+            font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; 
+            margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; 
         }
 
-        /* Barra de Pontuação Soma Zero */
-        .score-container { width: 100%; max-width: 500px; margin-bottom: 15px; }
-        .score-labels { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; }
-        .score-bar { height: 12px; background: #334155; border-radius: 6px; overflow: hidden; display: flex; border: 1px solid #475569; }
-        #bar-a { background: var(--p0); width: 50%; transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-        #bar-b { background: var(--p1); width: 50%; transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .score-bar { width: 100%; max-width: 500px; height: 12px; background: #444; border-radius: 6px; overflow: hidden; display: flex; margin: 10px 0; border: 1px solid #555; }
+        #bar-a { background: var(--p2); width: 50%; transition: 0.8s ease; }
+        #bar-b { background: var(--p1); width: 50%; transition: 0.8s ease; }
 
-        /* Layout Principal */
-        #main-wrapper { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; }
-
-        @media (min-width: 900px) {
-            #main-wrapper { flex-direction: row; align-items: flex-start; justify-content: center; }
-            #ui-panel { width: 320px; }
-            #board { --cell-size: 42px; }
+        #board { 
+            display: grid; 
+            grid-template-columns: repeat(14, var(--cell-size)); 
+            grid-template-rows: repeat(14, var(--cell-size)); 
+            background: #111; border: 4px solid #333;
+            --cell-size: 6.8vw;
         }
+        @media (min-width: 700px) { #board { --cell-size: 42px; } }
 
-        @media (max-width: 899px) {
-            #board { --cell-size: 6.9vw; }
-            #ui-panel { width: 100%; }
-        }
-
-        /* Tabuleiro */
-        #board {
-            display: grid;
-            grid-template-columns: repeat(14, var(--cell-size));
-            grid-template-rows: repeat(14, var(--cell-size));
-            border: 4px solid #334155; border-radius: 4px;
-            background: #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
-
-        .cell {
-            width: var(--cell-size); height: var(--cell-size);
-            display: flex; justify-content: center; align-items: center;
-            font-size: calc(var(--cell-size) * 0.7); cursor: pointer; position: relative;
-        }
-
+        .cell { width: var(--cell-size); height: var(--cell-size); display: flex; justify-content: center; align-items: center; font-size: calc(var(--cell-size) * 0.75); cursor: pointer; }
         .l { background: var(--tile-l); } .d { background: var(--tile-d); }
-        .neutral { background: #0f172a !important; cursor: default; }
-        .neutral::after { content: '•'; color: #334155; font-size: 10px; }
+        .void { visibility: hidden; pointer-events: none; }
+        
+        .selected { background: #f1c40f !important; }
+        .hint { background: rgba(0, 255, 0, 0.3) !important; border-radius: 50%; background-clip: content-box; padding: 10px; }
+        .hint-cap { background: rgba(255, 0, 0, 0.4) !important; }
 
-        .selected { background: #60a5fa !important; box-shadow: inset 0 0 8px rgba(0,0,0,0.5); }
-        .hint { background: rgba(16, 185, 129, 0.5) !important; }
-        .piece { z-index: 10; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); user-select: none; }
+        .piece { z-index: 10; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.6)); user-select: none; }
 
-        /* Painel de Controle */
-        #ui-panel { display: flex; flex-direction: column; gap: 10px; }
-        .players-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .stat-card { background: var(--card); padding: 10px; border-radius: 6px; border-left: 4px solid #555; font-size: 13px; transition: 0.3s; }
-        .active-p { border-left-color: #fff !important; background: #334155; box-shadow: 0 0 10px rgba(255,255,255,0.1); }
-
-        #log {
-            background: #000; height: 100px; overflow-y: auto; padding: 10px;
-            font-family: monospace; font-size: 11px; border-radius: 4px; color: #10b981; border: 1px solid #334155;
-        }
-
-        button {
-            background: #3b82f6; color: white; border: none; padding: 12px;
-            border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;
-        }
-        button:active { transform: scale(0.98); }
-        .btn-reset { background: #ef4444; font-size: 11px; padding: 8px; margin-top: 5px; }
+        #ui { width: 100%; max-width: 550px; margin-top: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .players-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-card { background: var(--card); padding: 10px; border-radius: 5px; border-left: 6px solid #555; font-size: 13px; }
+        .active-p { border-left-color: #fff !important; background: #3d3d3d; transform: scale(1.02); }
+        
+        #log { background: #000; height: 70px; overflow-y: auto; padding: 8px; font-family: monospace; font-size: 11px; color: #2ecc71; border: 1px solid #333; border-radius: 4px; }
+        button { background: #333; color: white; border: 1px solid #555; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:active { background: #555; }
     </style>
 </head>
 <body>
 
-    <div class="score-container">
-        <div class="score-labels">
-            <span style="color: var(--p0)">Time A (N/S): <span id="score-a">0</span></span>
-            <span style="color: var(--p1)">Time B (L/O): <span id="score-b">0</span></span>
-        </div>
-        <div class="score-bar"><div id="bar-a"></div><div id="bar-b"></div></div>
+    <div style="font-size: 14px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">
+        <span style="color: var(--p2)">Time Vermelho</span> vs <span style="color: var(--p1)">Time Verde</span>
     </div>
+    <div class="score-bar"><div id="bar-a"></div><div id="bar-b"></div></div>
 
-    <div id="main-wrapper">
-        <div id="board"></div>
+    <div id="board"></div>
 
-        <div id="ui-panel">
-            <div class="players-grid">
-                <div id="p0-card" class="stat-card" style="border-left-color: var(--p0)">P1: Norte</div>
-                <div id="p1-card" class="stat-card" style="border-left-color: var(--p1)">P2: Leste</div>
-                <div id="p2-card" class="stat-card" style="border-left-color: var(--p2)">P3: Sul</div>
-                <div id="p3-card" class="stat-card" style="border-left-color: var(--p3)">P4: Oeste</div>
-            </div>
-
-            <button onclick="engine.aiMove()">Sugestão da IA</button>
-            <div id="log">Aguardando Firebase...</div>
-            <button class="btn-reset" onclick="resetOnlineGame()">Resetar Partida Online</button>
+    <div id="ui">
+        <div class="players-grid">
+            <div id="p0-card" class="stat-card" style="border-left-color: var(--p0)">P1: Amarelo (N)</div>
+            <div id="p1-card" class="stat-card" style="border-left-color: var(--p1)">P2: Verde (E)</div>
+            <div id="p2-card" class="stat-card" style="border-left-color: var(--p2)">P3: Vermelho (S)</div>
+            <div id="p3-card" class="stat-card" style="border-left-color: var(--p3)">P4: Azul (W)</div>
         </div>
+
+        <button onclick="engine.aiMove()">Sugestão de Jogada (IA)</button>
+        <div id="log">Aguardando Firebase...</div>
+        <button onclick="resetOnlineGame()" style="background: #c0392b; border: none; font-size: 11px;">Resetar Jogo Global</button>
     </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
 
 <script>
-/**
- * CONFIGURAÇÃO DO FIREBASE
- */
+/** CONFIGURAÇÃO FIREBASE **/
 const firebaseConfig = {
     apiKey: "AIzaSyCWE88_PnPfL6QPa9-R9zN6QPQ5Y8Ni_E0",
     authDomain: "chess-4x4.firebaseapp.com",
@@ -125,14 +88,12 @@ const firebaseConfig = {
     messagingSenderId: "735568669929",
     appId: "1:735568669929:web:b5faa11547954fb8051478"
 };
-
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database().ref("online_chaturanga_v3");
+const db = firebase.database().ref("traditional_chaturanga_v6");
 
-/**
- * MOTOR DE LÓGICA (ENGINE)
- */
-const PIECE_VALUES = { 'P': 10, 'N': 30, 'E': 25, 'B': 30, 'R': 50, 'Q': 40, 'K': 1000 };
+/** MOTOR DE JOGO (TRADICIONAL) **/
+const PIECE_ICONS = { 'R':'♜', 'N':'♞', 'B':'♝', 'Q':'♛', 'K':'♚', 'P':'♟' };
+const PIECE_VALS = { 'P':10, 'N':30, 'B':30, 'R':50, 'Q':90, 'K':1000 };
 
 class ChaturangaEngine {
     constructor() {
@@ -147,66 +108,65 @@ class ChaturangaEngine {
         for (let r = 0; r < 14; r++) {
             b[r] = [];
             for (let c = 0; c < 14; c++) {
-                const neutral = (r < 3 || r > 10) && (c < 3 || c > 10);
-                b[r][c] = { type: null, player: null, neutral };
+                const isVoid = (r < 3 || r > 10) && (c < 3 || c > 10);
+                b[r][c] = { type: null, player: null, void: isVoid };
             }
         }
-        const layout = ['R','N','E','B','K','Q','B','E','N','R'];
-        for(let i=0; i<10; i++) {
-            this.set(b, 0, i+2, 'RNEK QBEN R'[i], 0); this.set(b, 1, i+2, 'P', 0);
-            this.set(b, 13, i+2, 'RNEB KQEN R'[i], 2); this.set(b, 12, i+2, 'P', 2);
-            this.set(b, i+2, 0, 'RNEB KQEN R'[i], 3); this.set(b, i+2, 1, 'P', 3);
-            this.set(b, i+2, 13, 'RNEK QBEN R'[i], 1); this.set(b, i+2, 12, 'P', 1);
+        // Torre, Cavalo, Bispo, Rainha, Rei, Bispo, Cavalo, Torre
+        const layout = ['R','N','B','Q','K','B','N','R'];
+
+        for(let i=0; i<8; i++) {
+            this.set(b, 0, i+3, layout[i], 0); this.set(b, 1, i+3, 'P', 0); // Norte
+            this.set(b, 13, i+3, layout[7-i], 2); this.set(b, 12, i+3, 'P', 2); // Sul
+            this.set(b, i+3, 13, layout[i], 1); this.set(b, i+3, 12, 'P', 1); // Leste
+            this.set(b, i+3, 0, layout[7-i], 3); this.set(b, i+3, 1, 'P', 3); // Oeste
         }
         return b;
     }
 
-    set(b, r, c, t, p) { if(t !== ' ') b[r][c] = { type: t, player: p, neutral: false }; }
+    set(b, r, c, t, p) { if(t) b[r][c] = { type: t, player: p, void: false }; }
 
-    getMoves(r, c, board) {
-        const p = board[r][c];
-        if(!p.type) return [];
-        let m = [];
+    getMoves(r, c, b) {
+        const p = b[r][c];
+        let moves = [];
         const ds = {
             ortho: [[0,1],[0,-1],[1,0],[-1,0]],
             diag: [[1,1],[1,-1],[-1,1],[-1,-1]],
-            knight: [[1,2],[1,-2],[-1,2],[-1,-2],[2,1],[2,-1],[-2,1],[-2,-1]],
-            elephant: [[2,2],[2,-2],[-2,2],[-2,-2]]
+            knight: [[1,2],[1,-2],[-1,2],[-1,-2],[2,1],[2,-1],[-2,1],[-2,-1]]
         };
 
         const slide = (dirs) => dirs.forEach(d => {
             let nr = r + d[0], nc = c + d[1];
-            while(this.in(nr, nc)) {
-                if(!board[nr][nc].type || board[nr][nc].player % 2 !== p.player % 2) m.push({r: nr, c: nc});
-                if(board[nr][nc].type) break;
+            while(this.isOk(nr, nc)) {
+                if(!b[nr][nc].type || b[nr][nc].player % 2 !== p.player % 2) moves.push({r: nr, c: nc});
+                if(b[nr][nc].type) break;
                 nr += d[0]; nc += d[1];
             }
         });
 
         const jump = (dirs) => dirs.forEach(d => {
             let nr = r + d[0], nc = c + d[1];
-            if(this.in(nr, nc) && (!board[nr][nc].type || board[nr][nc].player % 2 !== p.player % 2)) m.push({r: nr, c: nc});
+            if(this.isOk(nr, nc) && (!b[nr][nc].type || b[nr][nc].player % 2 !== p.player % 2)) moves.push({r: nr, c: nc});
         });
 
         if(p.type==='R') slide(ds.ortho);
         if(p.type==='B') slide(ds.diag);
-        if(p.type==='Q') jump(ds.diag); // Ferz move
+        if(p.type==='Q') slide([...ds.ortho, ...ds.diag]);
         if(p.type==='K') jump([...ds.ortho, ...ds.diag]);
         if(p.type==='N') jump(ds.knight);
-        if(p.type==='E') jump(ds.elephant);
         if(p.type==='P') {
-            let f = [[1,0], [0,-1], [-1,0], [0,1]][p.player];
-            if(this.in(r+f[0], c+f[1]) && !board[r+f[0]][c+f[1]].type) m.push({r: r+f[0], c: c+f[1]});
-            let cap = p.player % 2 === 0 ? [[f[0], 1], [f[0], -1]] : [[1, f[1]], [-1, f[1]]];
-            cap.forEach(s => {
+            let f = [[1,0], [0,-1], [-1,0], [0,1]][p.player]; // Norte desce, Sul sobe...
+            if(this.isOk(r+f[0], c+f[1]) && !b[r+f[0]][c+f[1]].type) moves.push({r: r+f[0], c: c+f[1]});
+            let caps = p.player % 2 === 0 ? [[f[0], 1], [f[0], -1]] : [[1, f[1]], [-1, f[1]]];
+            caps.forEach(s => {
                 let nr = r+s[0], nc = c+s[1];
-                if(this.in(nr, nc) && board[nr][nc].type && board[nr][nc].player % 2 !== p.player % 2) m.push({r: nr, c: nc});
+                if(this.isOk(nr, nc) && b[nr][nc].type && b[nr][nc].player % 2 !== p.player % 2) moves.push({r: nr, c: nc});
             });
         }
-        return m;
+        return moves;
     }
 
-    in(r, c) { return r >= 0 && r < 14 && c >= 0 && c < 14 && !this.board[r][c].neutral; }
+    isOk(r, c) { return r >= 0 && r < 14 && c >= 0 && c < 14 && !this.board[r][c].void; }
 
     evaluate(b) {
         let sA = 0, sB = 0;
@@ -214,7 +174,7 @@ class ChaturangaEngine {
             for(let c=0; c<14; c++) {
                 let p = b[r][c];
                 if(p.type) {
-                    let v = PIECE_VALUES[p.type] + (5 - Math.abs(6.5 - r)) + (5 - Math.abs(6.5 - c));
+                    let v = PIECE_VALS[p.type] + (5 - Math.abs(6.5 - r));
                     if(p.player % 2 === 0) sA += v; else sB += v;
                 }
             }
@@ -229,117 +189,82 @@ class ChaturangaEngine {
                 if(this.board[r][c].player === this.turn) {
                     this.getMoves(r, c, this.board).forEach(m => {
                         let oldT = {...this.board[m.r][m.c]}, oldM = {...this.board[r][c]};
-                        this.board[m.r][m.c] = oldM; this.board[r][c] = {type:null, player:null, neutral:false};
+                        this.board[m.r][m.c] = oldM; this.board[r][c] = {type:null, player:null, void:false};
                         let v = this.evaluate(this.board);
-                        if(this.turn % 2 === 0) { if(v > bestV) { bestV = v; best = {fr:r, fc:c, tr:m.r, tc:m.c}; } }
-                        else { if(v < bestV) { bestV = v; best = {fr:r, fc:c, tr:m.r, tc:m.c}; } }
+                        if(this.turn % 2 === 0 ? v > bestV : v < bestV) { bestV = v; best = {fr:r, fc:c, tr:m.r, tc:m.c}; }
                         this.board[r][c] = oldM; this.board[m.r][m.c] = oldT;
                     });
                 }
             }
         }
         if(best) {
-            log(`IA: (${best.fr},${best.fc}) → (${best.tr},${best.tc})`);
+            log(`Sugestão: ${PIECE_ICONS[this.board[best.fr][best.fc].type]} para (${best.tr},${best.tc})`);
             document.querySelector(`[data-r="${best.fr}"][data-c="${best.fc}"]`).click();
-            setTimeout(() => document.querySelector(`[data-r="${best.tr}"][data-c="${best.tc}"]`).click(), 400);
+            setTimeout(() => document.querySelector(`[data-r="${best.tr}"][data-c="${best.tc}"]`).click(), 300);
         }
     }
 }
 
-/**
- * INTERFACE E SINCRONIZAÇÃO
- */
+/** INTERFACE E SYNC **/
 const engine = new ChaturangaEngine();
 let selected = null, validMoves = [];
 
 function draw() {
-    const bEl = document.getElementById('board');
-    bEl.innerHTML = '';
+    const bEl = document.getElementById('board'); bEl.innerHTML = '';
     const score = engine.evaluate(engine.board);
-
-    document.getElementById('score-a').innerText = score > 0 ? `+${score}` : '0';
-    document.getElementById('score-b').innerText = score < 0 ? `+${Math.abs(score)}` : '0';
-    document.getElementById('bar-a').style.width = `${50 + (score / 40)}%`;
+    document.getElementById('bar-a').style.width = `${50 + (score / 60)}%`;
 
     for(let i=0; i<4; i++) {
-        document.getElementById(`p${i}-card`).className = `stat-card ${engine.turn === i ? 'active-p' : ''}`;
-        if(!engine.kingsAlive[i]) document.getElementById(`p${i}-card`).style.opacity = '0.3';
+        const el = document.getElementById(`p${i}-card`);
+        el.className = `stat-card ${engine.turn === i ? 'active-p' : ''}`;
+        el.style.opacity = engine.kingsAlive[i] ? '1' : '0.3';
     }
 
     for(let r=0; r<14; r++) {
         for(let c=0; c<14; c++) {
-            const data = engine.board[r][c];
+            const d = engine.board[r][c];
             const div = document.createElement('div');
-            div.className = `cell ${(r+c)%2===0?'l':'d'} ${data.neutral?'neutral':''}`;
+            div.className = `cell ${(r+c)%2===0?'l':'d'} ${d.void?'void':''}`;
             div.dataset.r = r; div.dataset.c = c;
-
-            if(data.type) {
-                div.innerHTML = `<span class="piece">${{'R':'♜','N':'♞','E':'🐘','B':'♝','Q':'♛','K':'♚','P':'♟'}[data.type]}</span>`;
-                div.style.color = `var(--p${data.player})`;
+            
+            if(d.type) {
+                div.innerHTML = `<span class="piece" style="color:var(--p${d.player})">${PIECE_ICONS[d.type]}</span>`;
             }
-
-            if(selected && selected.r === r && selected.c === c) div.classList.add('selected');
-            if(validMoves.some(m => m.r === r && m.c === c)) div.classList.add('hint');
+            if(selected?.r === r && selected?.c === c) div.classList.add('selected');
+            const mv = validMoves.find(m => m.r === r && m.c === c);
+            if(mv) div.classList.add(engine.board[r][c].type ? 'hint-cap' : 'hint');
 
             div.onclick = () => {
-                if(validMoves.some(m => m.r === r && m.c === c)) {
+                const move = validMoves.find(m => m.r === r && m.c === c);
+                if(move) {
                     if(engine.board[r][c].type === 'K') engine.kingsAlive[engine.board[r][c].player] = false;
                     engine.board[r][c] = {...engine.board[selected.r][selected.c]};
-                    engine.board[selected.r][selected.c] = {type:null, player:null, neutral:false};
+                    engine.board[selected.r][selected.c] = {type:null, player:null, void:false};
                     engine.turn = (engine.turn + 1) % 4;
-                    while(!engine.kingsAlive[engine.turn]) engine.turn = (engine.turn + 1) % 4;
-
+                    while(!engine.kingsAlive[engine.turn] && engine.kingsAlive.some((k,i)=>i%2===engine.turn%2 && k)) engine.turn = (engine.turn + 1) % 4;
                     db.set({ board: engine.board, turn: engine.turn, kingsAlive: engine.kingsAlive });
                     selected = null; validMoves = [];
-                } else if(data.player === engine.turn) {
+                } else if(d.player === engine.turn) {
                     selected = {r, c};
                     validMoves = engine.getMoves(r, c, engine.board);
-                    draw();
-                } else { selected = null; validMoves = []; draw(); }
+                } else { selected = null; validMoves = []; }
+                draw();
             };
             bEl.appendChild(div);
         }
     }
 }
 
-function log(msg) {
-    const l = document.getElementById('log');
-    l.innerHTML = `<div>> ${msg}</div>` + l.innerHTML;
-    l.scrollTop = 0;
-}
+function log(msg) { const l = document.getElementById('log'); l.innerHTML = `<div>> ${msg}</div>` + l.innerHTML; }
+function resetOnlineGame() { db.set({ board: engine.createBoard(), turn: 0, kingsAlive: [true,true,true,true] }); }
 
-function resetOnlineGame() {
-    db.set({
-        board: engine.createBoard(),
-        turn: 0,
-        kingsAlive: [true, true, true, true]
-    });
-}
-
-// Ouvinte Firebase
 db.on('value', (snap) => {
     const d = snap.val();
     if(d) {
-        engine.board = d.board;
-        engine.turn = d.turn;
-        engine.kingsAlive = d.kingsAlive || [true, true, true, true];
-        document.getElementById('log').innerText = "Conectado!";
-        draw();
-    } else {
-        resetOnlineGame();
-    }
-}, (err) => {
-    document.getElementById('log').innerText = "Erro: Verifique as Regras do Firebase!";
-    console.error(err);
+        engine.board = d.board; engine.turn = d.turn; engine.kingsAlive = d.kingsAlive; draw();
+        document.getElementById('log').innerText = "Sistema Online";
+    } else { resetOnlineGame(); }
 });
-
-// Timeout de segurança se o Firebase não responder
-setTimeout(() => {
-    if(document.getElementById('log').innerText === "Aguardando Firebase...") {
-        document.getElementById('log').innerText = "Tentando resetar...";
-        resetOnlineGame();
-    }
-}, 4000);
 </script>
 </body>
 </html>
