@@ -23,23 +23,30 @@
         }
         .sel-btn { width: 240px; padding: 15px; margin: 8px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; }
 
+        /* Barra de Pontuação Team A vs Team B */
+        .score-container { width: 100%; max-width: 690px; margin-bottom: 10px; }
+        .score-labels { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-bottom: 4px; }
+        .score-bar { height: 12px; background: #334155; border-radius: 6px; overflow: hidden; display: flex; border: 1px solid #475569; }
+        #bar-a { background: linear-gradient(to right, var(--c0), var(--c2)); width: 50%; transition: 0.8s ease; }
+        #bar-b { background: linear-gradient(to right, var(--c1), var(--c3)); width: 50%; transition: 0.8s ease; }
+
         /* Estrutura do Tabuleiro e Coordenadas */
         .game-area { display: flex; flex-direction: column; align-items: center; }
         .row-coords { 
             display: grid; 
             grid-template-columns: repeat(16, var(--cell-size)); 
-            height: 25px;
-            margin-left: 25px; /* Compensar a coluna de números da esquerda */
-            margin-right: 25px; /* Compensar a coluna de números da direita */
+            height: 20px;
+            margin-left: 20px; 
+            margin-right: 20px; 
         }
         .middle-row { display: flex; align-items: center; }
         .col-coords { 
             display: grid; 
             grid-template-rows: repeat(16, var(--cell-size)); 
-            width: 25px; 
+            width: 20px; 
         }
 
-        .label { font-size: 11px; font-weight: 800; color: #64748b; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
+        .label { font-size: 10px; font-weight: 800; color: #64748b; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
 
         #board { 
             display: grid; 
@@ -62,18 +69,17 @@
         .hint { background: rgba(74, 222, 128, 0.3) !important; border-radius: 50%; background-clip: content-box; padding: 10px; }
         .hint-cap { background: rgba(248, 113, 113, 0.4) !important; }
 
-        /* Painéis */
-        #chat-container { width: 100%; max-width: 600px; background: var(--card); border-radius: 8px; margin-top: 15px; border: 1px solid #334155; overflow: hidden; }
-        #chat-messages { height: 90px; overflow-y: auto; padding: 10px; font-size: 12px; background: #020617; }
+        /* Chat e Painéis */
+        #chat-container { width: 100%; max-width: 690px; background: var(--card); border-radius: 8px; margin-top: 15px; border: 1px solid #334155; overflow: hidden; }
+        #chat-messages { height: 80px; overflow-y: auto; padding: 10px; font-size: 12px; background: #020617; }
         #chat-input-area { display: flex; padding: 8px; background: var(--card); }
         #chat-input { flex: 1; background: #0f172a; border: 1px solid #334155; color: white; padding: 10px; border-radius: 4px; }
         
-        .players-grid { display: grid; grid-template-columns: repeat(4, 1fr); width: 100%; max-width: 700px; gap: 5px; margin-top: 15px; }
+        .players-grid { display: grid; grid-template-columns: repeat(4, 1fr); width: 100%; max-width: 690px; gap: 5px; margin-top: 10px; }
         .stat-card { background: var(--card); padding: 8px; border-radius: 4px; border-bottom: 3px solid #444; font-size: 10px; text-align: center; }
         .active-p { border-bottom-color: #fff !important; background: #334155; }
         
-        #log { font-size: 11px; color: #94a3b8; margin: 10px; }
-        .btn-ia { background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; max-width: 600px; }
+        #log { font-size: 11px; color: #94a3b8; margin: 10px; text-align: center; }
     </style>
 </head>
 <body>
@@ -85,6 +91,14 @@
         <button class="sel-btn" style="background:var(--c1)" onclick="setMyRole(1)">P2: LESTE (Verde)</button>
         <button class="sel-btn" style="background:var(--c2)" onclick="setMyRole(2)">P3: SUL (Amarelo)</button>
         <button class="sel-btn" style="background:var(--c3)" onclick="setMyRole(3)">P4: OESTE (Azul)</button>
+    </div>
+
+    <div class="score-container">
+        <div class="score-labels">
+            <span style="color:var(--c0)">TIME A (N/S): <span id="val-a">0</span></span>
+            <span style="color:var(--c1)">TIME B (E/W): <span id="val-b">0</span></span>
+        </div>
+        <div class="score-bar"><div id="bar-a"></div><div id="bar-b"></div></div>
     </div>
 
     <div class="game-area">
@@ -107,14 +121,13 @@
     <div id="chat-container">
         <div id="chat-messages"></div>
         <div id="chat-input-area">
-            <input type="text" id="chat-input" placeholder="Chat de Equipe...">
-            <button onclick="sendChatMessage()" style="margin-left:5px; padding:0 15px; background:#3b82f6; border:none; color:white; border-radius:4px;">Enviar</button>
+            <input type="text" id="chat-input" placeholder="Chat Privado de Equipe...">
+            <button onclick="sendChatMessage()" style="margin-left:5px; padding:0 15px; background:#3b82f6; border:none; color:white; border-radius:4px; cursor:pointer;">Enviar</button>
         </div>
     </div>
 
-    <button class="btn-ia" style="margin-top:15px;" onclick="engine.aiMove()">Sugestão da IA</button>
-    <div id="log">Status: Conectando ao Firebase...</div>
-    <button onclick="resetOnlineGame()" style="background:none; border:none; color:#450a0a; font-size:10px; margin-top:20px; cursor:pointer;">Resetar Jogo Global</button>
+    <div id="log">Status: Sincronizando...</div>
+    <button onclick="resetOnlineGame()" style="background:none; border:none; color:#450a0a; font-size:10px; margin-top:20px; cursor:pointer; font-weight:bold;">REINICIAR PARTIDA GLOBAL</button>
 
 <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
@@ -131,7 +144,7 @@ const firebaseConfig = {
     appId: "1:735568669929:web:b5faa11547954fb8051478"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database().ref("precision_citadel_v15");
+const db = firebase.database().ref("final_precision_v16");
 
 let MY_ID = null;
 let MY_TEAM = null;
@@ -144,8 +157,8 @@ function setMyRole(id) {
     drawBoard();
 }
 
-/** COORDENADAS PRECISAS **/
-function updateCoords() {
+/** COORDENADAS **/
+function updateCoordsUI() {
     const letters = "ABCDEFGHIJKLMNOP".split("");
     const top = document.getElementById('coords-top');
     const bottom = document.getElementById('coords-bottom');
@@ -153,7 +166,6 @@ function updateCoords() {
     const right = document.getElementById('coords-right');
 
     top.innerHTML = bottom.innerHTML = letters.map(l => `<div class="label">${l}</div>`).join("");
-    
     let nums = "";
     for(let i=16; i>=1; i--) nums += `<div class="label">${i}</div>`;
     left.innerHTML = right.innerHTML = nums;
@@ -182,10 +194,10 @@ class ChaturangaEngine {
         }
         const layout = ['R','N','E','F','K','G','D','X','N','R'];
         for(let i=0; i<10; i++) {
-            this.setPiece(b, 0, i+3, layout[i], 0); this.setPiece(b, 1, i+3, 'P', 0);
-            this.setPiece(b, 15, i+3, layout[9-i], 2); this.setPiece(b, 14, i+3, 'P', 2);
-            this.setPiece(b, i+3, 15, layout[i], 1); this.setPiece(b, i+3, 14, 'P', 1);
-            this.setPiece(b, i+3, 0, layout[9-i], 3); this.setPiece(b, i+3, 1, 'P', 3);
+            this.setPiece(b, 0, i+3, layout[i], 0); this.setPiece(b, 1, i+3, 'P', 0); // Norte
+            this.setPiece(b, 15, i+3, layout[9-i], 2); this.setPiece(b, 14, i+3, 'P', 2); // Sul
+            this.setPiece(b, i+3, 15, layout[i], 1); this.setPiece(b, i+3, 14, 'P', 1); // Leste
+            this.setPiece(b, i+3, 0, layout[9-i], 3); this.setPiece(b, i+3, 1, 'P', 3); // Oeste
         }
         return b;
     }
@@ -244,26 +256,19 @@ class ChaturangaEngine {
         return m;
     }
 
-    aiMove() {
-        if(this.turn !== MY_ID) return;
-        let best = null, bestV = this.turn % 2 === 0 ? -Infinity : Infinity;
-        for(let r=0; r<16; r++) {
-            for(let c=0; c<16; c++) {
-                if(this.board[r][c].player === this.turn) {
-                    this.getMoves(r, c, this.board).forEach(m => {
-                        let score = (this.turn%2===0?1:-1) * (PIECE_VALS[this.board[m.r][m.c].type] || 0);
-                        if(this.turn%2===0 ? score > bestV : score < bestV) {
-                            bestV = score; best = {fr:r, fc:c, tr:m.r, tc:m.c};
-                        }
-                    });
+    evaluate() {
+        let scoreA = 0, scoreB = 0;
+        for(let r=0; r<16; r++){
+            for(let c=0; c<16; c++){
+                let p = this.board[r][c];
+                if(p.type){
+                    let val = PIECE_VALS[p.type];
+                    if(p.player === 0 || p.player === 2) scoreA += val;
+                    else scoreB += val;
                 }
             }
         }
-        if(best) {
-            selected = {r: best.fr, c: best.fc};
-            validMoves = this.getMoves(best.fr, best.fc, this.board);
-            drawBoard();
-        }
+        return {a: scoreA, b: scoreB};
     }
 }
 
@@ -271,14 +276,24 @@ const engine = new ChaturangaEngine();
 let selected = null, validMoves = [];
 
 function drawBoard() {
-    updateCoords();
+    updateCoordsUI();
     const bEl = document.getElementById('board'); bEl.innerHTML = '';
     
+    // Atualizar Pontuação
+    const scores = engine.evaluate();
+    document.getElementById('val-a').innerText = scores.a;
+    document.getElementById('val-b').innerText = scores.b;
+    const total = scores.a + scores.b || 1;
+    document.getElementById('bar-a').style.width = `${(scores.a / total) * 100}%`;
+
+    // Atualizar Status dos Jogadores
     for(let i=0; i<4; i++) {
-        document.getElementById(`p${i}-card`).className = `stat-card ${engine.turn === i ? 'active-p' : ''}`;
-        document.getElementById(`p${i}-card`).style.opacity = engine.kingsAlive[i] ? '1' : '0.3';
+        const el = document.getElementById(`p${i}-card`);
+        el.className = `stat-card ${engine.turn === i ? 'active-p' : ''}`;
+        el.style.opacity = engine.kingsAlive[i] ? '1' : '0.3';
     }
 
+    // Renderizar Células
     for(let r=0; r<16; r++) {
         for(let c=0; c<16; c++) {
             const d = engine.board[r][c];
@@ -295,8 +310,10 @@ function drawBoard() {
                     engine.board[r][c] = {...engine.board[selected.r][selected.c], firstMove: false};
                     engine.board[selected.r][selected.c] = {type:null, player:null, void:false};
                     if(engine.board[r][c].type === 'P' && (r===0||r===15||c===0||c===15)) engine.board[r][c].type = 'G';
+                    
                     engine.turn = (engine.turn + 1) % 4;
                     while(!engine.kingsAlive[engine.turn] && engine.kingsAlive.some((k,i)=>i%2===engine.turn%2&&k)) engine.turn=(engine.turn+1)%4;
+                    
                     db.update({ board: engine.board, turn: engine.turn, kingsAlive: engine.kingsAlive });
                     selected = null; validMoves = [];
                 } else if(d.player === engine.turn && MY_ID === engine.turn) {
@@ -327,13 +344,17 @@ function sendChatMessage() {
     input.value = "";
 }
 
+// Enter envia chat
+document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChatMessage(); });
+
 function resetOnlineGame() { db.set({ board: engine.createBoard(), turn: 0, kingsAlive: [true,true,true,true], chats: {teamA:{}, teamB:{}} }); }
+
 db.on('value', (s) => { 
     const d = s.val(); 
     if(d && d.board) { 
         engine.board=d.board; engine.turn=d.turn; engine.kingsAlive=d.kingsAlive; 
         if(MY_ID !== null) drawBoard(); 
-        document.getElementById('log').innerText="Conectado à Cidadela"; 
+        document.getElementById('log').innerText="Status: Online e Sincronizado"; 
     } else resetOnlineGame(); 
 });
 </script>
