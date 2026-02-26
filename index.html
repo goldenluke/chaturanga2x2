@@ -3,149 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chaturanga 16x16 - Legion & AI Edition</title>
+    <title>Eternal Citadel 16x16 - Oracle Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #020617; --card: #1e293b;
-            --tile-l: #cbd5e1; --tile-d: #475569;
-            --c0: #f87171; --c1: #4ade80; --c2: #fbbf24; --c3: #60a5fa;
-            --cell-size: 5.4vw;
-        }
-        @media (min-width: 900px) { :root { --cell-size: 38px; } }
-
-        * { box-sizing: border-box; touch-action: manipulation; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-
-        /* Overlay de Seleção */
-        #player-selector {
-            position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.95);
-            z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .sel-btn { width: 240px; padding: 15px; margin: 8px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; }
-
-        /* Pontuação e Clocks */
-        .score-container { width: 100%; max-width: 650px; margin-bottom: 10px; }
-        .score-labels { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-bottom: 4px; }
-        .score-bar { height: 12px; background: #334155; border-radius: 6px; overflow: hidden; display: flex; border: 1px solid #475569; }
-        #bar-a { background: linear-gradient(to right, var(--c0), var(--c2)); width: 50%; transition: 0.8s ease; }
-        #bar-b { background: linear-gradient(to right, var(--c1), var(--c3)); width: 50%; transition: 0.8s ease; }
-
-        .players-grid { display: grid; grid-template-columns: repeat(4, 1fr); width: 100%; max-width: 650px; gap: 5px; margin-bottom: 10px; }
-        .stat-card { background: var(--card); padding: 8px; border-radius: 4px; border-bottom: 3px solid #444; font-size: 10px; text-align: center; }
-        .active-p { border-bottom-color: #fff !important; background: #334155; }
-        .clock { font-family: monospace; font-size: 14px; font-weight: bold; margin-top: 3px; }
-        .low-time { color: #f87171; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
-
-        /* Grid Tabuleiro */
-        .game-area { display: flex; flex-direction: column; align-items: center; }
-        .row-coords { display: grid; grid-template-columns: repeat(16, var(--cell-size)); height: 20px; margin: 0 20px; }
-        .middle-row { display: flex; align-items: center; }
-        .col-coords { display: grid; grid-template-rows: repeat(16, var(--cell-size)); width: 20px; }
-        .label { font-size: 10px; font-weight: 800; color: #64748b; display: flex; align-items: center; justify-content: center; }
-
-        #board { display: grid; grid-template-columns: repeat(16, var(--cell-size)); grid-template-rows: repeat(16, var(--cell-size)); background: #0f172a; border: 2px solid #334155; }
-        .cell { width: var(--cell-size); height: var(--cell-size); display: flex; justify-content: center; align-items: center; font-size: calc(var(--cell-size) * 0.7); cursor: pointer; }
-        .l { background: var(--tile-l); } .d { background: var(--tile-d); }
-        .void { visibility: hidden; pointer-events: none; }
-        
-        .piece { z-index: 10; user-select: none; transition: 0.1s; }
-        .p0 .piece { color: var(--c0); text-shadow: 0 0 8px var(--c0); }
-        .p1 .piece { color: var(--c1); text-shadow: 0 0 8px var(--c1); }
-        .p2 .piece { color: var(--c2); text-shadow: 0 0 8px var(--c2); }
-        .p3 .piece { color: var(--c3); text-shadow: 0 0 8px var(--c3); }
-        .selected { background: #94a3b8 !important; box-shadow: inset 0 0 10px black; }
-        .ai-hint-square { background: rgba(59, 130, 246, 0.6) !important; box-shadow: inset 0 0 10px #3b82f6; }
-        .hint { background: rgba(74, 222, 128, 0.3) !important; border-radius: 50%; background-clip: content-box; padding: 10px; }
-        .hint-cap { background: rgba(248, 113, 113, 0.4) !important; }
-
-        /* Sistema de Chat Duplo */
-        #chat-container { width: 100%; max-width: 650px; background: var(--card); border-radius: 8px; margin-top: 10px; border: 1px solid #334155; overflow: hidden; }
-        .chat-tabs { display: flex; background: #0f172a; border-bottom: 1px solid #334155; }
-        .chat-tab { flex: 1; padding: 10px; border: none; background: none; color: #64748b; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        .chat-tab.active { color: #fff; background: var(--card); border-bottom: 2px solid #3b82f6; }
-        #chat-messages { height: 100px; overflow-y: auto; padding: 10px; font-size: 12px; background: #020617; }
-        #chat-input-area { display: flex; padding: 8px; background: var(--card); }
-        #chat-input { flex: 1; background: #0f172a; border: 1px solid #334155; color: white; padding: 10px; border-radius: 4px; }
-
-        /* Manual */
-        .manual-container { width: 100%; max-width: 650px; background: #111827; border-radius: 8px; padding: 12px; margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border: 1px solid #1e293b; }
-        .manual-item { font-size: 10px; line-height: 1.4; color: #94a3b8; }
-        .manual-item b { color: #fff; display: block; margin-bottom: 2px; }
-
-        .btn-group { display: flex; gap: 10px; width: 100%; max-width: 650px; margin-top: 15px; }
-        .btn { flex: 1; padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; color: white; }
-        .btn-ia { background: #3b82f6; }
-        .btn-reset { background: #ef4444; }
-        #log { font-size: 11px; color: #94a3b8; margin: 10px; text-align: center; }
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .piece { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); transition: all 0.1s; pointer-events: none; }
+        .p0-color { color: #f87171; text-shadow: 0 0 10px #f87171; }
+        .p1-color { color: #4ade80; text-shadow: 0 0 10px #4ade80; }
+        .p2-color { color: #fbbf24; text-shadow: 0 0 10px #fbbf24; }
+        .p3-color { color: #60a5fa; text-shadow: 0 0 10px #60a5fa; }
+        .ai-hint { background-color: rgba(59, 130, 246, 0.5) !important; box-shadow: inset 0 0 15px #3b82f6; }
+        #board { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); grid-template-rows: repeat(16, minmax(0, 1fr)); }
+        .cell-size { width: 5.4vw; height: 5.4vw; position: relative; }
+        @media (min-width: 900px) { .cell-size { width: 40px; height: 40px; } }
     </style>
 </head>
-<body>
+<body class="flex flex-col items-center p-2 md:p-4 select-none min-h-screen">
 
-    <div id="player-selector">
-        <h2 style="margin-bottom: 20px;">Eternal Citadel 16x16</h2>
-        <button class="sel-btn" style="background:var(--c0)" onclick="setMyRole(0)">P1: NORTE</button>
-        <button class="sel-btn" style="background:var(--c1)" onclick="setMyRole(1)">P2: LESTE</button>
-        <button class="sel-btn" style="background:var(--c2)" onclick="setMyRole(2)">P3: SUL</button>
-        <button class="sel-btn" style="background:var(--c3)" onclick="setMyRole(3)">P4: OESTE</button>
-    </div>
-
-    <div class="score-container">
-        <div class="score-labels">
-            <span style="color:var(--c0)">TIME A (N/S): <span id="val-a">0</span></span>
-            <span style="color:var(--c1)">TIME B (E/W): <span id="val-b">0</span></span>
-        </div>
-        <div class="score-bar"><div id="bar-a"></div><div id="bar-b"></div></div>
-    </div>
-
-    <div class="players-grid">
-        <div id="p0-card" class="stat-card">NORTE <div id="clock-0" class="clock">01:00</div></div>
-        <div id="p1-card" class="stat-card">LESTE <div id="clock-1" class="clock">01:00</div></div>
-        <div id="p2-card" class="stat-card">SUL <div id="clock-2" class="clock">01:00</div></div>
-        <div id="p3-card" class="stat-card">OESTE <div id="clock-3" class="clock">01:00</div></div>
-    </div>
-
-    <div class="game-area">
-        <div class="row-coords" id="coords-top"></div>
-        <div class="middle-row">
-            <div class="col-coords" id="coords-left"></div>
-            <div id="board"></div>
-            <div class="col-coords" id="coords-right"></div>
-        </div>
-        <div class="row-coords" id="coords-bottom"></div>
-    </div>
-
-    <div class="btn-group">
-        <button class="btn btn-ia" onclick="engine.aiSuggest()">Sugestão da IA (Hint)</button>
-        <button class="btn btn-reset" onclick="resetOnlineGame()">Reiniciar Jogo</button>
-    </div>
-
-    <div id="chat-container">
-        <div class="chat-tabs">
-            <button id="tab-team" class="chat-tab active" onclick="switchChat('team')">Chat do Time</button>
-            <button id="tab-global" class="chat-tab" onclick="switchChat('global')">Chat Global</button>
-        </div>
-        <div id="chat-messages"></div>
-        <div id="chat-input-area">
-            <input type="text" id="chat-input" placeholder="Mensagem...">
-            <button onclick="sendChatMessage()" style="margin-left:5px; padding:0 15px; background:#3b82f6; border:none; color:white; border-radius:4px; cursor:pointer;">OK</button>
+    <!-- Seletor de Jogador -->
+    <div id="player-selector" class="fixed inset-0 bg-black/98 z-[1000] flex flex-col items-center justify-center p-4 text-center">
+        <h1 class="text-3xl font-black mb-2 text-blue-500 italic uppercase tracking-tighter">ETERNAL CITADEL</h1>
+        <p class="text-slate-400 mb-8 text-sm font-bold tracking-widest">SISTEMA ONLINE DE EQUIPES 2x2</p>
+        <div class="flex flex-col gap-4 w-full max-w-xs">
+            <button class="w-full py-4 rounded-xl font-bold bg-red-500 shadow-lg active:scale-95 transition" onclick="setMyRole(0)">P1: NORTE (VERMELHO)</button>
+            <button class="w-full py-4 rounded-xl font-bold bg-green-500 shadow-lg active:scale-95 transition" onclick="setMyRole(1)">P2: LESTE (VERDE)</button>
+            <button class="w-full py-4 rounded-xl font-bold bg-amber-500 shadow-lg active:scale-95 transition" onclick="setMyRole(2)">P3: SUL (AMARELO)</button>
+            <button class="w-full py-4 rounded-xl font-bold bg-blue-500 shadow-lg active:scale-95 transition" onclick="setMyRole(3)">P4: OESTE (AZUL)</button>
         </div>
     </div>
 
-    <div class="manual-container">
-        <div class="manual-item">
-            <b>🐉 DRAGÃO (D)</b> Cavalo + Desliza 2 casas retas.
-            <br><b>⚔️ GENERAL (G)</b> Rei + Desliza 2 casas. Promoção.
-            <br><b>🦅 FALCÃO (F)</b> Bispo (Desliza máx. 4 casas).
+    <!-- Interface Principal -->
+    <div id="game-container" class="hidden flex flex-col items-center w-full animate-in fade-in duration-700">
+        
+        <!-- Barra de Pontuação Team A vs B -->
+        <div class="w-full max-w-[690px] mb-4 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+            <div class="flex justify-between text-[10px] font-black uppercase mb-1 tracking-widest">
+                <span class="text-red-400">Time A (N/S): <span id="score-a">0</span></span>
+                <span class="text-green-400">Time B (E/W): <span id="score-b">0</span></span>
+            </div>
+            <div class="h-3 bg-slate-800 rounded-full overflow-hidden flex border border-slate-700">
+                <div id="bar-a" class="h-full bg-red-500 transition-all duration-700" style="width: 50%"></div>
+                <div id="bar-b" class="h-full bg-green-500 transition-all duration-700 w-full"></div>
+            </div>
         </div>
-        <div class="manual-item">
-            <b>🔥 FÊNIX (X)</b> Desliza exatamente 2 casas diag.
-            <br><b>🐘 ELEFANTE (E)</b> Salta 2 casas diag. (Pula peças).
-            <br><b>♟️ PEÃO (P)</b> Avança 2 no 1º lance.
+
+        <!-- Timers de 120s -->
+        <div class="grid grid-cols-4 gap-2 w-full max-w-[690px] mb-4">
+            <div id="p0-card" class="bg-slate-800/50 p-2 rounded-lg border-b-4 border-slate-700 text-center">
+                <span class="text-[9px] text-slate-500 font-bold uppercase">Norte</span>
+                <div id="timer-0" class="text-lg font-mono font-bold leading-none mt-1">120s</div>
+            </div>
+            <div id="p1-card" class="bg-slate-800/50 p-2 rounded-lg border-b-4 border-slate-700 text-center">
+                <span class="text-[9px] text-slate-500 font-bold uppercase">Leste</span>
+                <div id="timer-1" class="text-lg font-mono font-bold leading-none mt-1">120s</div>
+            </div>
+            <div id="p2-card" class="bg-slate-800/50 p-2 rounded-lg border-b-4 border-slate-700 text-center">
+                <span class="text-[9px] text-slate-500 font-bold uppercase">Sul</span>
+                <div id="timer-2" class="text-lg font-mono font-bold leading-none mt-1">120s</div>
+            </div>
+            <div id="p3-card" class="bg-slate-800/50 p-2 rounded-lg border-b-4 border-slate-700 text-center">
+                <span class="text-[9px] text-slate-500 font-bold uppercase">Oeste</span>
+                <div id="timer-3" class="text-lg font-mono font-bold leading-none mt-1">120s</div>
+            </div>
+        </div>
+
+        <!-- Tabuleiro -->
+        <div class="flex flex-col items-center bg-slate-900 p-2 md:p-3 rounded-2xl border border-slate-800 shadow-2xl">
+            <div id="coords-top" class="grid grid-cols-[repeat(16,minmax(0,1fr))] px-5 w-full h-5 text-[10px] font-bold text-slate-600"></div>
+            <div class="flex items-center">
+                <div id="coords-left" class="grid grid-rows-[repeat(16,minmax(0,1fr))] h-full w-5 text-[10px] font-bold text-slate-600 text-center"></div>
+                <div id="board" class="border-2 border-slate-700 bg-slate-950 relative overflow-hidden"></div>
+                <div id="coords-right" class="grid grid-rows-[repeat(16,minmax(0,1fr))] h-full w-5 text-[10px] font-bold text-slate-600 text-center"></div>
+            </div>
+            <div id="coords-bottom" class="grid grid-cols-[repeat(16,minmax(0,1fr))] px-5 w-full h-5 text-[10px] font-bold text-slate-600"></div>
+        </div>
+
+        <!-- Botões -->
+        <div class="flex gap-2 w-full max-w-[650px] mt-4">
+            <button onclick="engine.aiSuggest()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold text-xs uppercase transition shadow-lg shadow-blue-500/20">Dica IA (Broadcast)</button>
+            <button onclick="resetOnlineGame()" class="flex-1 bg-slate-800 hover:bg-red-900/40 text-slate-400 py-3 rounded-xl font-bold text-xs border border-slate-700 uppercase">Reiniciar Partida</button>
+        </div>
+
+        <!-- Chats -->
+        <div class="w-full max-w-[650px] bg-slate-800 rounded-2xl mt-4 overflow-hidden border border-slate-700 shadow-lg">
+            <div class="flex bg-slate-900/50 p-1">
+                <button id="tab-team" class="flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition-all" onclick="switchChat('team')">Team Strategy</button>
+                <button id="tab-global" class="flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition-all" onclick="switchChat('global')">Global Diplomat</button>
+            </div>
+            <div id="chat-messages" class="h-28 overflow-y-auto p-3 text-xs bg-slate-950/40 space-y-1"></div>
+            <div class="p-2 flex gap-2 border-t border-slate-700">
+                <input type="text" id="chat-input" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="Mensagem...">
+                <button onclick="sendChatMessage()" class="bg-blue-600 px-4 py-2 rounded-lg font-bold text-xs uppercase">OK</button>
+            </div>
+        </div>
+
+        <!-- MANUAL DE PEÇAS -->
+        <div class="w-full max-w-[650px] grid grid-cols-2 gap-4 mt-6 p-4 bg-slate-900/80 rounded-2xl text-[10px] text-slate-400 border border-slate-800 shadow-xl mb-10">
+            <div class="space-y-4">
+                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">🐉 Dragão (D)</b> Move como Cavalo OU desliza 2 casas retas. É bloqueado por peças no deslizamento.</p>
+                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">⚔️ General (G)</b> Move como Rei OU desliza 2 casas (todas direções). Não pula peças. Defesa suprema.</p>
+                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">🦅 Falcão (F)</b> Move como Bispo, mas limitado ao alcance máximo de 4 casas.</p>
+            </div>
+            <div class="space-y-4">
+                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">🔥 Fênix (X)</b> Desliza exatamente 2 casas na diagonal. Não pode pular obstáculos.</p>
+                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">🐘 Elefante (E)</b> Salta exatamente 2 casas na diagonal. Ignora bloqueios (pula peças).</p>
+                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">♟️ Peão (P)</b> Avança 2 casas no 1º lance. Promove a General ao cruzar o mapa.</p>
+            </div>
         </div>
     </div>
-
-    <div id="log">Status: Sincronizando...</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
@@ -162,99 +129,58 @@ const firebaseConfig = {
     appId: "1:735568669929:web:b5faa11547954fb8051478"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database().ref("citadel_hint_v21");
+const db = firebase.database().ref("oracle_citadel_120s_v30");
 
-let MY_ID = null;
-let MY_TEAM = null;
-let activeChat = 'team'; 
-let clocks = [60, 60, 60, 60];
-let clockInterval = null;
-let aiSuggestion = null;
+const TURN_TIME = 120;
+let MY_ID = null, MY_TEAM = null, turnStartedAt = 0, activeChat = 'team', aiSuggestion = null;
 
 function setMyRole(id) {
     MY_ID = id;
     MY_TEAM = (id === 0 || id === 2) ? 'teamA' : 'teamB';
-    document.getElementById('player-selector').style.display = 'none';
-    initChats();
+    document.getElementById('player-selector').classList.add('hidden');
+    document.getElementById('game-container').classList.remove('hidden');
+    switchChat('team');
     drawBoard();
 }
 
-/** CHAT **/
-function switchChat(type) {
-    activeChat = type;
-    document.getElementById('tab-team').classList.toggle('active', type === 'team');
-    document.getElementById('tab-global').classList.toggle('active', type === 'global');
-    document.getElementById('chat-messages').innerHTML = "";
-    loadChatHistory();
-}
-function loadChatHistory() {
-    const path = activeChat === 'team' ? `chats/${MY_TEAM}` : 'chats/global';
-    db.child(path).off(); 
-    db.child(path).limitToLast(15).on('child_added', snap => {
-        const d = snap.val();
-        const colors = ['var(--c0)','var(--c1)','var(--c2)','var(--c3)'];
-        document.getElementById('chat-messages').innerHTML += `<div><b style="color:${colors[d.player]}">P${d.player+1}:</b> ${d.msg}</div>`;
-        document.getElementById('chat-messages').scrollTop = 9999;
-    });
-}
-function initChats() { loadChatHistory(); }
-function sendChatMessage() {
-    const i = document.getElementById('chat-input');
-    if(!i.value.trim() || MY_ID === null) return;
-    const path = activeChat === 'team' ? `chats/${MY_TEAM}` : 'chats/global';
-    db.child(path).push({ player: MY_ID, msg: i.value });
-    i.value = "";
-}
-
-/** CLOCKS **/
-function formatTime(sec) {
-    if (sec <= 0) return "00:00";
-    return `${Math.floor(sec/60).toString().padStart(2,'0')}:${(sec%60).toString().padStart(2,'0')}`;
-}
-function updateClocksUI() {
-    for(let i=0; i<4; i++) {
-        const el = document.getElementById(`clock-${i}`);
-        el.innerText = formatTime(clocks[i]);
-        el.classList.toggle('low-time', clocks[i] < 10);
+/** CLOCK **/
+setInterval(() => {
+    if (turnStartedAt === 0) return;
+    const now = Date.now();
+    const elapsed = Math.floor((now - turnStartedAt) / 1000);
+    const remaining = Math.max(0, TURN_TIME - elapsed);
+    for (let i = 0; i < 4; i++) {
+        const el = document.getElementById(`timer-${i}`);
+        if (i === engine.turn) {
+            el.innerText = `${remaining}s`;
+            el.style.color = remaining < 15 ? '#f87171' : '#fff';
+            if (remaining === 0 && MY_ID === engine.turn) engine.passTurn();
+        } else { el.innerText = "120s"; el.style.color = '#475569'; }
     }
-}
-function startClock() {
-    clearInterval(clockInterval);
-    clockInterval = setInterval(() => {
-        if (clocks[engine.turn] > 0) {
-            clocks[engine.turn] -= 1;
-            updateClocksUI();
-            if (MY_ID === engine.turn && clocks[engine.turn] % 3 === 0) db.child('clocks').set(clocks);
-        } else if (MY_ID === engine.turn) {
-            engine.passTurnAuto();
-        }
-    }, 1000);
-}
+}, 1000);
 
-/** ENGINE (16x16) **/
+/** ENGINE **/
 const PIECE_ICONS = { 'R':'♜', 'N':'♞', 'E':'🐘', 'F':'🦅', 'D':'🐉', 'X':'🔥', 'G':'⚔️', 'K':'♚', 'P':'♟' };
-const PIECE_VALS = { 'P':10, 'N':30, 'E':25, 'F':35, 'D':55, 'X':40, 'G':65, 'R':50, 'K':1000 };
+const PIECE_VALS = { 'P':10, 'N':30, 'E':25, 'F':35, 'D':60, 'X':40, 'G':70, 'R':50, 'K':1000 };
 
 class ChaturangaEngine {
     constructor() { this.dim = 16; this.board = []; this.turn = 0; this.kingsAlive = [true,true,true,true]; }
-    
     createBoard() {
         let b = [];
         for(let r=0; r<16; r++) {
             b[r] = [];
             for(let c=0; c<16; c++) b[r][c] = { type: null, player: null, void: (r<3||r>12)&&(c<3||c>12), firstMove: true };
         }
-        const layout = ['R','N','E','F','K','G','D','X','N','R'];
+        const l = ['R','N', 'E', 'F', 'K', 'G', 'D', 'X', 'N', 'R'];
         for(let i=0; i<10; i++) {
-            this.set(b,0,i+3,layout[i],0); this.set(b,1,i+3,'P',0);
-            this.set(b,15,i+3,layout[9-i],2); this.set(b,14,i+3,'P',2);
-            this.set(b,i+3,15,layout[i],1); this.set(b,i+3,14,'P',1);
-            this.set(b,i+3,0,layout[9-i],3); this.set(b,i+3,1,'P',3);
+            this.setPiece(b,0,i+3,l[i],0); this.setPiece(b,1,i+3,'P',0);
+            this.setPiece(b,15,i+3,l[9-i],2); this.setPiece(b,14,i+3,'P',2);
+            this.setPiece(b,i+3,15,l[i],1); this.setPiece(b,i+3,14,'P',1);
+            this.setPiece(b,i+3,0,l[9-i],3); this.setPiece(b,i+3,1,'P',3);
         }
         return b;
     }
-    set(b,r,c,t,p) { if(t) b[r][c] = { type: t, player: p, void: false, firstMove: true }; }
-
+    setPiece(b,r,c,t,p) { if(t) b[r][c] = { type: t, player: p, void: false, firstMove: true }; }
     getMoves(r, c, b) {
         const p = b[r][c]; if(!p || !p.type) return [];
         let m = []; const ds = { ortho:[[0,1],[0,-1],[1,0],[-1,0]], diag:[[1,1],[1,-1],[-1,1],[-1,-1]], knight:[[1,2],[1,-2],[-1,2],[-1,-2],[2,1],[2,-1],[-2,1],[-2,-1]] };
@@ -293,56 +219,28 @@ class ChaturangaEngine {
         }
         return m;
     }
-
-    evaluate(b) {
-        let sA=0, sB=0;
-        for(let r=0; r<16; r++) for(let c=0; c<16; c++) {
-            let p = b[r][c]; if(p.type) { if(p.player%2===0) sA+=PIECE_VALS[p.type]; else sB+=PIECE_VALS[p.type]; }
-        }
-        return {a:sA, b:sB};
-    }
-
-    aiSuggest() {
-        if(this.turn !== MY_ID) return;
-        let bestMove = null;
-        let maxEval = -Infinity;
-
-        for(let r=0; r<16; r++) {
-            for(let c=0; c<16; c++) {
-                if(this.board[r][c].player === MY_ID) {
-                    const moves = this.getMoves(r, c, this.board);
-                    moves.forEach(mv => {
-                        let score = 0;
-                        const target = this.board[mv.r][mv.c];
-                        if(target.type) score += PIECE_VALS[target.type] * 10;
-                        score += (8 - Math.abs(7.5 - mv.r)) + (8 - Math.abs(7.5 - mv.c));
-                        
-                        if(score > maxEval) {
-                            maxEval = score;
-                            bestMove = {from:{r,c}, to:{r:mv.r, c:mv.c}};
-                        }
-                    });
-                }
-            }
-        }
-        if(bestMove) {
-            aiSuggestion = bestMove;
-            drawBoard();
-            
-            // NOVO: Enviar mensagem automática ao Chat Global
-            db.child('chats/global').push({ 
-                player: MY_ID, 
-                msg: "⚠️ ATENÇÃO: ACABEI DE USAR UMA SUGESTÃO DA IA! 🧠" 
-            });
-
-            setTimeout(() => { aiSuggestion = null; drawBoard(); }, 3000);
-        }
-    }
-
-    passTurnAuto() {
+    passTurn() {
         let n = (this.turn + 1) % 4;
         while(!this.kingsAlive[n] && this.kingsAlive.some((k,i)=>i%2===n%2&&k)) n = (n+1)%4;
-        db.update({ turn: n, clocks: clocks });
+        db.update({ turn: n, turnStartedAt: firebase.database.ServerValue.TIMESTAMP });
+    }
+    aiSuggest() {
+        if(this.turn !== MY_ID) return;
+        let best = null, max = -Infinity;
+        for(let r=0; r<16; r++) for(let c=0; c<16; c++) {
+            if(this.board[r][c].player === MY_ID) {
+                this.getMoves(r, c, this.board).forEach(mv => {
+                    let sc = (this.board[mv.r][mv.c].type ? PIECE_VALS[this.board[mv.r][mv.c].type]*10 : 0);
+                    sc += (8 - Math.abs(7.5-mv.r)) + (8 - Math.abs(7.5-mv.c));
+                    if(sc > max) { max = sc; best = {from:{r,c}, to:{r:mv.r, c:mv.c}}; }
+                });
+            }
+        }
+        if(best) {
+            aiSuggestion = best; drawBoard();
+            db.child('chats/global').push({ player: MY_ID, msg: "🧠 USOU A DICA DO ORÁCULO IA!" });
+            setTimeout(() => { aiSuggestion = null; drawBoard(); }, 4000);
+        }
     }
 }
 
@@ -351,46 +249,38 @@ let selected = null, validMoves = [];
 
 function drawBoard() {
     const letters = "ABCDEFGHIJKLMNOP".split("");
-    document.getElementById('coords-top').innerHTML = document.getElementById('coords-bottom').innerHTML = letters.map(l => `<div class="label">${l}</div>`).join("");
-    let nums = ""; for(let i=16; i>=1; i--) nums += `<div class="label">${i}</div>`;
+    document.getElementById('coords-top').innerHTML = document.getElementById('coords-bottom').innerHTML = letters.map(l => `<div class="flex items-center justify-center">${l}</div>`).join("");
+    let nums = ""; for(let i=16; i>=1; i--) nums += `<div class="flex items-center justify-center">${i}</div>`;
     document.getElementById('coords-left').innerHTML = document.getElementById('coords-right').innerHTML = nums;
 
     const bEl = document.getElementById('board'); bEl.innerHTML = '';
-    const sc = engine.evaluate(engine.board);
-    document.getElementById('val-a').innerText = sc.a; document.getElementById('val-b').innerText = sc.b;
-    document.getElementById('bar-a').style.width = `${(sc.a / (sc.a + sc.b || 1)) * 100}%`;
-
-    for(let i=0; i<4; i++) {
-        document.getElementById(`p${i}-card`).className = `stat-card ${engine.turn === i ? 'active-p' : ''}`;
-        document.getElementById(`p${i}-card`).style.opacity = engine.kingsAlive[i] ? '1' : '0.3';
-    }
-    updateClocksUI();
-
+    let sA=0, sB=0;
     for(let r=0; r<16; r++) for(let c=0; c<16; c++) {
-        const d = engine.board[r][c]; const div = document.createElement('div');
-        div.className = `cell ${(r+c)%2===0?'l':'d'} ${d.void?'void':''} p${d.player}`;
-        if(d.type) div.innerHTML = `<span class="piece">${PIECE_ICONS[d.type]}</span>`;
-        
-        if(selected?.r === r && selected?.c === c) div.classList.add('selected');
-        
-        if(aiSuggestion && ((aiSuggestion.from.r === r && aiSuggestion.from.c === c) || (aiSuggestion.to.r === r && aiSuggestion.to.c === c))) {
-            div.classList.add('ai-hint-square');
+        const d = engine.board[r][c];
+        if(d.type) { if(d.player%2===0) sA+=PIECE_VALS[d.type]; else sB+=PIECE_VALS[d.type]; }
+        const div = document.createElement('div');
+        div.className = `cell-size flex items-center justify-center cursor-pointer transition-colors ${(r+c)%2===0?'bg-[#cbd5e1]':'bg-[#475569]'} ${d.void?'invisible pointer-events-none':''}`;
+        if(d.type) {
+            const span = document.createElement('span');
+            span.className = `piece text-xl md:text-2xl p${d.player}-color font-bold`;
+            span.innerText = PIECE_ICONS[d.type];
+            div.appendChild(span);
         }
-
+        if(selected?.r === r && selected?.c === c) div.classList.add('bg-blue-300');
+        if(aiSuggestion && ((aiSuggestion.from.r === r && aiSuggestion.from.c === c) || (aiSuggestion.to.r === r && aiSuggestion.to.c === c))) div.classList.add('ai-hint');
         const mv = validMoves.find(m => m.r === r && m.c === c);
-        if(mv) div.classList.add(engine.board[r][c].type ? 'hint-cap' : 'hint');
-
+        if(mv) {
+            const h = document.createElement('div');
+            h.className = d.type ? 'absolute inset-0 bg-red-500/30' : 'w-3 h-3 bg-blue-500/40 rounded-full';
+            div.appendChild(h);
+        }
         div.onclick = () => {
             if(mv) {
-                clocks[MY_ID] += 3;
                 if(engine.board[r][c].type === 'K') engine.kingsAlive[engine.board[r][c].player] = false;
                 engine.board[r][c] = {...engine.board[selected.r][selected.c], firstMove: false};
                 engine.board[selected.r][selected.c] = {type:null, player:null, void:false};
                 if(engine.board[r][c].type === 'P' && (r===0||r===15||c===0||c===15)) engine.board[r][c].type = 'G';
-                let n = (engine.turn + 1) % 4;
-                while(!engine.kingsAlive[n] && engine.kingsAlive.some((k,i)=>i%2===n%2&&k)) n = (n+1)%4;
-                db.update({ board: engine.board, turn: n, kingsAlive: engine.kingsAlive, clocks: clocks });
-                selected = null; validMoves = [];
+                engine.passTurn(); selected = null; validMoves = [];
             } else if(d.player === engine.turn && MY_ID === engine.turn) {
                 selected = {r, c}; validMoves = engine.getMoves(r, c, engine.board);
             } else { selected = null; validMoves = []; }
@@ -398,22 +288,46 @@ function drawBoard() {
         };
         bEl.appendChild(div);
     }
+    document.getElementById('score-a').innerText = sA; document.getElementById('score-b').innerText = sB;
+    document.getElementById('bar-a').style.width = `${(sA / (sA + sB || 1)) * 100}%`;
+    for(let i=0; i<4; i++) {
+        const el = document.getElementById(`p${i}-card`);
+        el.className = `p-2 rounded-lg border-b-4 transition-all ${engine.turn === i ? 'border-white bg-slate-700 shadow-lg' : 'border-slate-800 bg-slate-900/50'}`;
+        el.style.opacity = engine.kingsAlive[i] ? '1' : '0.2';
+    }
+}
+
+/** CHAT **/
+function switchChat(type) {
+    activeChat = type;
+    document.getElementById('tab-team').className = `flex-1 py-3 text-[10px] font-black uppercase transition-all ${type === 'team' ? 'text-white border-b-2 border-blue-500' : 'text-slate-500'}`;
+    document.getElementById('tab-global').className = `flex-1 py-3 text-[10px] font-black uppercase transition-all ${type === 'global' ? 'text-white border-b-2 border-blue-500' : 'text-slate-500'}`;
+    document.getElementById('chat-messages').innerHTML = "";
+    const path = activeChat === 'team' ? `chats/${MY_TEAM}` : 'chats/global';
+    db.child(path).off(); db.child(path).limitToLast(15).on('child_added', snap => {
+        const d = snap.val(); const colors = ['text-red-400','text-green-400','text-amber-400','text-blue-400'];
+        document.getElementById('chat-messages').innerHTML += `<div><b class="${colors[d.player]}">P${d.player+1}:</b> <span class="text-slate-200">${d.msg}</span></div>`;
+        document.getElementById('chat-messages').scrollTop = 9999;
+    });
+}
+function sendChatMessage() {
+    const i = document.getElementById('chat-input'); if(!i.value.trim() || MY_ID === null) return;
+    const path = activeChat === 'team' ? `chats/${MY_TEAM}` : 'chats/global';
+    db.child(path).push({ player: MY_ID, msg: i.value }); i.value = "";
 }
 
 function resetOnlineGame() { 
-    if(!confirm("Deseja resetar a partida para todos?")) return;
-    db.set({ board: engine.createBoard(), turn: 0, kingsAlive: [true,true,true,true], clocks: [60, 60, 60, 60], chats: {teamA:{}, teamB:{}, global:{}} }); 
+    if(!confirm("Resetar partida global?")) return;
+    db.set({ board: engine.createBoard(), turn: 0, kingsAlive: [true,true,true,true], turnStartedAt: firebase.database.ServerValue.TIMESTAMP, chats: {teamA:{}, teamB:{}, global:{}} }); 
 }
 
 db.on('value', snap => { 
     const d = snap.val(); 
     if(d && d.board) { 
-        engine.board=d.board; engine.turn=d.turn; engine.kingsAlive=d.kingsAlive; clocks = d.clocks || [60,60,60,60];
-        startClock(); if(MY_ID !== null) drawBoard(); 
-        document.getElementById('log').innerText="Conectado à Cidadela"; 
-    } else {
-        db.set({ board: engine.createBoard(), turn: 0, kingsAlive: [true,true,true,true], clocks: [60,60,60,60] });
-    }
+        engine.board=d.board; engine.turn=d.turn; engine.kingsAlive=d.kingsAlive; 
+        turnStartedAt = d.turnStartedAt || Date.now();
+        if(MY_ID !== null) drawBoard(); 
+    } else resetOnlineGame();
 });
 </script>
 </body>
