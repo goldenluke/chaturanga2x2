@@ -3,30 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eternal Citadel 16x16 - Ironclad Stable</title>
+    <title>Eternal Citadel 16x16 - Final Fixed v37</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
-        .piece { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); transition: all 0.1s; pointer-events: none; }
+        .piece { filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8)); transition: all 0.1s; pointer-events: none; }
+        
         .p0-color { color: #f87171; text-shadow: 0 0 10px #f87171; }
         .p1-color { color: #4ade80; text-shadow: 0 0 10px #4ade80; }
         .p2-color { color: #fbbf24; text-shadow: 0 0 10px #fbbf24; }
         .p3-color { color: #60a5fa; text-shadow: 0 0 10px #60a5fa; }
+        
         .ai-hint { background-color: rgba(59, 130, 246, 0.5) !important; box-shadow: inset 0 0 15px #3b82f6; }
-        #board { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); grid-template-rows: repeat(16, minmax(0, 1fr)); }
-        .cell-size { width: 5.4vw; height: 5.4vw; position: relative; }
-        @media (min-width: 900px) { .cell-size { width: 40px; height: 40px; } }
+        
+        :root { --cell-size: 5.5vw; }
+        @media (min-width: 900px) { :root { --cell-size: 42px; } }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(16, var(--cell-size));
+            grid-template-rows: repeat(16, var(--cell-size));
+            border: 2px solid #334155;
+            background-color: #0f172a;
+        }
+
+        .label-cell {
+            display: flex; align-items: center; justify-content: center;
+            font-size: 9px; font-weight: 900; color: #475569; text-transform: uppercase;
+        }
     </style>
 </head>
 <body class="flex flex-col items-center p-2 md:p-4 select-none min-h-screen">
 
     <!-- Seletor de Jogador -->
     <div id="player-selector" class="fixed inset-0 bg-black/98 z-[1000] flex flex-col items-center justify-center p-4 text-center">
-        <h1 class="text-3xl font-black mb-2 text-blue-500 italic uppercase tracking-tighter">ETERNAL CITADEL</h1>
-        <p class="text-slate-400 mb-8 text-sm font-bold tracking-widest uppercase">Equipes 2x2 • Tabuleiro 16x16</p>
-        <div class="flex flex-col gap-4 w-full max-w-xs">
+        <h1 class="text-3xl font-black mb-1 text-blue-500 italic tracking-tighter">ETERNAL CITADEL</h1>
+        <p class="text-slate-400 mb-8 text-xs uppercase tracking-widest font-bold">Turnos de 120s • Batalha 2x2</p>
+        <div class="flex flex-col gap-3 w-full max-w-xs">
             <button class="w-full py-4 rounded-xl font-bold bg-red-500 shadow-lg active:scale-95 transition" onclick="setMyRole(0)">P1: NORTE (VERMELHO)</button>
             <button class="w-full py-4 rounded-xl font-bold bg-green-500 shadow-lg active:scale-95 transition" onclick="setMyRole(1)">P2: LESTE (VERDE)</button>
             <button class="w-full py-4 rounded-xl font-bold bg-amber-500 shadow-lg active:scale-95 transition" onclick="setMyRole(2)">P3: SUL (AMARELO)</button>
@@ -34,23 +49,23 @@
         </div>
     </div>
 
-    <!-- Interface Principal -->
-    <div id="game-container" class="hidden flex flex-col items-center w-full animate-in fade-in duration-700">
+    <!-- Interface -->
+    <div id="game-container" class="hidden flex flex-col items-center w-full">
         
-        <!-- Barra de Pontuação -->
-        <div class="w-full max-w-[690px] mb-4 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+        <!-- Score -->
+        <div class="w-full max-w-[710px] mb-4 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
             <div class="flex justify-between text-[10px] font-black uppercase mb-1 tracking-widest">
                 <span class="text-red-400">Team A (N/S): <span id="score-a-val">0</span></span>
                 <span class="text-green-400">Team B (E/W): <span id="score-b-val">0</span></span>
             </div>
-            <div class="h-3 bg-slate-800 rounded-full overflow-hidden flex border border-slate-700">
+            <div class="h-2.5 bg-slate-800 rounded-full overflow-hidden flex border border-slate-700">
                 <div id="bar-a" class="h-full bg-red-500 transition-all duration-1000" style="width: 50%"></div>
                 <div id="bar-b" class="h-full bg-green-500 transition-all duration-1000 w-full"></div>
             </div>
         </div>
 
         <!-- Timers -->
-        <div class="grid grid-cols-4 gap-2 w-full max-w-[690px] mb-4">
+        <div class="grid grid-cols-4 gap-2 w-full max-w-[710px] mb-4">
             <div id="p0-card" class="bg-slate-800/50 p-2 rounded-lg border-b-4 border-slate-700 text-center">
                 <span class="text-[9px] text-slate-500 font-bold uppercase">Norte</span>
                 <div id="timer-0" class="text-lg font-mono font-bold leading-none mt-1">120s</div>
@@ -70,46 +85,44 @@
         </div>
 
         <!-- Tabuleiro -->
-        <div class="flex flex-col items-center bg-slate-900 p-2 md:p-3 rounded-2xl border border-slate-800 shadow-2xl relative">
-            <div id="coords-top" class="grid grid-cols-[repeat(16,minmax(0,1fr))] px-5 w-full h-5 text-[10px] font-bold text-slate-600"></div>
+        <div class="flex flex-col items-center bg-slate-900 p-1 rounded-xl border border-slate-800 shadow-2xl">
+            <div id="coords-top" class="flex w-full h-4 ml-4"></div>
             <div class="flex items-center">
-                <div id="coords-left" class="grid grid-rows-[repeat(16,minmax(0,1fr))] h-full w-5 text-[10px] font-bold text-slate-600 text-center"></div>
-                <div id="board" class="border-2 border-slate-700 bg-slate-950 relative overflow-hidden"></div>
-                <div id="coords-right" class="grid grid-rows-[repeat(16,minmax(0,1fr))] h-full w-5 text-[10px] font-bold text-slate-600 text-center"></div>
+                <div id="coords-left" class="flex flex-col h-full w-4"></div>
+                <div id="board" class="bg-slate-950 relative overflow-hidden"></div>
+                <div id="coords-right" class="flex flex-col h-full w-4"></div>
             </div>
-            <div id="coords-bottom" class="grid grid-cols-[repeat(16,minmax(0,1fr))] px-5 w-full h-5 text-[10px] font-bold text-slate-600"></div>
+            <div id="coords-bottom" class="flex w-full h-4 ml-4"></div>
         </div>
 
-        <!-- Botões -->
-        <div class="flex gap-2 w-full max-w-[650px] mt-4">
-            <button onclick="engine.aiSuggest()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold text-xs uppercase transition shadow-lg shadow-blue-500/20">Dica IA (Broadcast)</button>
-            <button onclick="resetOnlineGame()" class="flex-1 bg-slate-800 hover:bg-red-900/40 text-slate-400 py-3 rounded-xl font-bold text-xs border border-slate-700 uppercase">Resetar Partida</button>
+        <!-- Botoes -->
+        <div class="flex gap-2 w-full max-w-[650px] mt-5">
+            <button onclick="engine.aiSuggest()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-black text-xs uppercase shadow-lg transition">Dica IA (Oracle)</button>
+            <button onclick="resetOnlineGame()" class="flex-1 bg-slate-800 hover:bg-red-900/40 text-slate-400 py-3 rounded-xl font-black text-xs border border-slate-700 uppercase transition">Reiniciar</button>
         </div>
 
-        <!-- Chats -->
+        <!-- Chat Dual -->
         <div class="w-full max-w-[650px] bg-slate-800 rounded-2xl mt-4 overflow-hidden border border-slate-700 shadow-lg">
             <div class="flex bg-slate-900/50 p-1">
                 <button id="tab-team" class="flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition-all" onclick="switchChat('team')">Team Strategy</button>
                 <button id="tab-global" class="flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition-all" onclick="switchChat('global')">Global Diplomat</button>
             </div>
-            <div id="chat-messages" class="h-28 overflow-y-auto p-3 text-xs bg-slate-950/40 space-y-1"></div>
+            <div id="chat-messages" class="h-24 overflow-y-auto p-3 text-xs bg-slate-950/40 space-y-1"></div>
             <div class="p-2 flex gap-2 border-t border-slate-700">
-                <input type="text" id="chat-input" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="Mensagem...">
-                <button onclick="sendChatMessage()" class="bg-blue-600 px-4 py-2 rounded-lg font-bold text-xs uppercase">OK</button>
+                <input type="text" id="chat-input" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none" placeholder="Escreva...">
+                <button onclick="sendChatMessage()" class="bg-blue-600 px-5 py-2 rounded-lg font-bold text-xs uppercase">OK</button>
             </div>
         </div>
 
         <!-- Manual -->
-        <div class="w-full max-w-[650px] grid grid-cols-2 gap-4 mt-6 p-4 bg-slate-900/80 rounded-2xl text-[10px] text-slate-400 border border-slate-800 shadow-xl mb-10">
-            <div class="space-y-4">
-                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">🐉 Dragão (D)</b> Move como Cavalo OU desliza 2 casas retas. É bloqueado por peças no caminho.</p>
-                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">⚔️ General (G)</b> Move como Rei OU desliza 2 casas. Não pula peças. Defesa suprema.</p>
-                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">🦅 Falcão (F)</b> Move como Bispo, mas limitado ao alcance máximo de 4 casas.</p>
+        <div class="w-full max-w-[650px] grid grid-cols-2 gap-4 mt-6 p-4 bg-slate-900/40 rounded-xl text-[9px] text-slate-500 border border-slate-800 mb-10">
+            <div>
+                <p><b>🐉 DRAGÃO (D)</b> Cavalo + Desliza 2 casas retas. Bloqueado por peças.</p>
+                <p><b>⚔️ GENERAL (G)</b> Rei + Desliza 2 casas (todas direções).</p>
             </div>
-            <div class="space-y-4">
-                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">🔥 Fênix (X)</b> Desliza exatamente 2 casas na diagonal. Não pula obstáculos.</p>
-                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">🐘 Elefante (E)</b> Salta exatas 2 casas na diagonal. Pula peças.</p>
-                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">♟️ Peão (P)</b> Avança 2 casas no 1º lance. Promove a General.</p>
+            <div>
+                <p><b>🐘 ELEFANTE (E)</b> Salta 2 diag. Única elite que pula peças.</p>
+                <p><b>♟️ PEÃO (P)</b> Avança 2 no 1º lance. Vira General no fim.</p>
             </div>
         </div>
     </div>
@@ -118,7 +131,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
 
 <script>
-/** FIREBASE **/
 const firebaseConfig = {
     apiKey: "AIzaSyCWE88_PnPfL6QPa9-R9zN6QPQ5Y8Ni_E0",
     authDomain: "chess-4x4.firebaseapp.com",
@@ -129,7 +141,7 @@ const firebaseConfig = {
     appId: "1:735568669929:web:b5faa11547954fb8051478"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database().ref("citadel_stable_v33");
+const db = firebase.database().ref("citadel_final_v37");
 
 const TURN_TIME = 120;
 let MY_ID = null, MY_TEAM = null, turnStartedAt = 0, activeChat = 'team', aiSuggestion = null;
@@ -141,15 +153,13 @@ function setMyRole(id) {
     document.getElementById('player-selector').classList.add('hidden');
     document.getElementById('game-container').classList.remove('hidden');
     switchChat('team');
-    drawBoard();
+    renderAll();
 }
 
-/** CLOCK **/
+/** TIMER **/
 setInterval(() => {
     if (turnStartedAt === 0) return;
-    const now = Date.now();
-    const elapsed = Math.floor((now - turnStartedAt) / 1000);
-    const remaining = Math.max(0, TURN_TIME - elapsed);
+    const remaining = Math.max(0, TURN_TIME - Math.floor((Date.now() - turnStartedAt) / 1000));
     for (let i = 0; i < 4; i++) {
         const el = document.getElementById(`timer-${i}`);
         if (i === engine.turn) {
@@ -172,19 +182,19 @@ class ChaturangaEngine {
             b[r] = [];
             for(let c=0; c<16; c++) b[r][c] = { type: null, player: null, void: (r<3||r>12)&&(c<3||c>12), firstMove: true };
         }
-        const l = ['R','N', 'E', 'F', 'K', 'G', 'D', 'X', 'N', 'R'];
+        const l = ['R','N','E', 'F', 'K', 'G', 'D', 'X', 'N', 'R'];
         for(let i=0; i<10; i++) {
-            this.setPiece(b,0,i+3,l[i],0); this.setPiece(b,1,i+3,'P',0);
-            this.setPiece(b,15,i+3,l[9-i],2); this.setPiece(b,14,i+3,'P',2);
-            this.setPiece(b,i+3,15,l[i],1); this.setPiece(b,i+3,14,'P',1);
-            this.setPiece(b,i+3,0,l[9-i],3); this.setPiece(b,i+3,1,'P',3);
+            this.set(b,0,i+3,l[i],0); this.set(b,1,i+3,'P',0);
+            this.set(b,15,i+3,l[9-i],2); this.set(b,14,i+3,'P',2);
+            this.set(b,i+3,15,l[i],1); this.set(b,i+3,14,'P',1);
+            this.set(b,i+3,0,l[9-i],3); this.set(b,i+3,1,'P',3);
         }
         return b;
     }
-    setPiece(b,r,c,t,p) { if(t) b[r][c] = { type: t, player: p, void: false, firstMove: true }; }
+    set(b,r,c,t,p) { if(t) b[r][c] = { type: t, player: p, void: false, firstMove: true }; }
     getMoves(r, c, b) {
         const p = b[r][c]; if(!p || !p.type) return [];
-        let m = []; const ds = { ortho:[[0,1],[0,-1],[1,0],[-1,0]], diag:[[1,1],[1,-1],[-1,1],[-1,-1]], knight:[[1,2],[1,-2],[-1,2],[-1,-2],[2,1],[2,-1],[-2,1],[-2,-1]] };
+        let m = []; const ds = { ortho:[[0,1],[0,-1],[1,0],[-1,0]], diag:[[1,1],[1,-1],[-1,1],[-1,-1]], knight:[[1,2],[1,-2],[-1,2],[-1,-2],[2,1],[2,-1],[-2,1],[-2,-1]], j2D:[[2,2],[2,-2],[-2,2],[-2,-2]] };
         const slide = (dirs, lim) => dirs.forEach(d => {
             for(let i=1; i<=lim; i++) {
                 let nr=r+d[0]*i, nc=c+d[1]*i;
@@ -195,11 +205,11 @@ class ChaturangaEngine {
         });
         const jump = (dirs) => dirs.forEach(d => {
             let nr=r+d[0], nc=c+d[1];
-            if(nr>=0 && nr<16 && nc>=0 && nc<16 && !b[nr][nc].void) { if(!b[nr][nc].type || b[nr][nc].player%2 !== p.player%2) m.push({r:nr, c:nc}); }
+            if(nr>=0&&nr<16&&nc>=0&&nc<16&&!b[nr][nc].void) { if(!b[nr][nc].type || b[nr][nc].player%2 !== p.player%2) m.push({r:nr, c:nc}); }
         });
         if(p.type==='R') slide(ds.ortho, 16);
         if(p.type==='N') jump(ds.knight);
-        if(p.type==='E') jump([[2,2],[2,-2],[-2,2],[-2,-2]]);
+        if(p.type==='E') jump(ds.j2D);
         if(p.type==='F') slide(ds.diag, 4);
         if(p.type==='T') slide(ds.ortho, 2);
         if(p.type==='X') slide(ds.diag, 2);
@@ -238,107 +248,67 @@ class ChaturangaEngine {
             }
         }
         if(best) {
-            aiSuggestion = best; drawBoard();
+            aiSuggestion = best; renderAll();
             db.child('chats/global').push({ player: MY_ID, msg: "🤖 USOU A DICA DA IA! 🧠" });
-            setTimeout(() => { aiSuggestion = null; drawBoard(); }, 4000);
+            setTimeout(() => { aiSuggestion = null; renderAll(); }, 4000);
         }
     }
 }
 
 const engine = new ChaturangaEngine();
 
-function drawBoard() {
-    const letters = "ABCDEFGHIJKLMNOP".split("");
-    document.getElementById('coords-top').innerHTML = document.getElementById('coords-bottom').innerHTML = letters.map(l => `<div class="flex items-center justify-center">${l}</div>`).join("");
-    let nums = ""; for(let i=16; i>=1; i--) nums += `<div class="flex items-center justify-center">${i}</div>`;
+function renderAll() {
+    // Coordenadas
+    const L = "ABCDEFGHIJKLMNOP".split("");
+    document.getElementById('coords-top').innerHTML = document.getElementById('coords-bottom').innerHTML = L.map(l => `<div class="label-cell" style="width:var(--cell-size)">${l}</div>`).join("");
+    let nums = ""; for(let i=16; i>=1; i--) nums += `<div class="label-cell" style="height:var(--cell-size)">${i}</div>`;
     document.getElementById('coords-left').innerHTML = document.getElementById('coords-right').innerHTML = nums;
 
+    // Board
     const bEl = document.getElementById('board'); bEl.innerHTML = '';
-    
-    // SCORE (FIXED: Filter nulls properly)
     let sA=0, sB=0;
     for(let r=0; r<16; r++) for(let c=0; c<16; c++) {
         const d = engine.board[r][c];
-        if(d && d.type && d.player !== null) { 
-            if(d.player === 0 || d.player === 2) sA += PIECE_VALS[d.type]; 
-            else sB += PIECE_VALS[d.type]; 
-        }
+        if(d.type && d.player !== null) { if(d.player%2===0) sA+=PIECE_VALS[d.type]; else sB+=PIECE_VALS[d.type]; }
+        const div = document.createElement('div');
+        div.className = `cell-size flex items-center justify-center cursor-pointer transition-colors ${(r+c)%2===0?'bg-[#cbd5e1]':'bg-[#475569]'} ${d.void?'invisible pointer-events-none':''}`;
+        if(d.type) div.innerHTML = `<span class="piece text-xl md:text-2xl p${d.player}-color font-bold">${PIECE_ICONS[d.type]}</span>`;
+        if(selectedSq?.r === r && selectedSq?.c === c) div.classList.add('bg-blue-300');
+        if(aiSuggestion && ((aiSuggestion.from.r === r && aiSuggestion.from.c === c) || (aiSuggestion.to.r === r && aiSuggestion.to.c === c))) div.classList.add('ai-hint');
+        const mv = validMoves.find(m => m.r === r && m.c === c);
+        if(mv) div.innerHTML += `<div class="absolute ${d.type?'inset-0 bg-red-500/30':'w-3 h-3 bg-blue-500/40 rounded-full'}"></div>`;
+        div.onclick = () => {
+            if(mv) {
+                if(engine.board[r][c].type === 'K') engine.kingsAlive[engine.board[r][c].player] = false;
+                engine.board[r][c] = {...engine.board[selectedSq.r][selectedSq.c], firstMove: false};
+                engine.board[selectedSq.r][selectedSq.c] = {type:null, player:null, void:false};
+                if(engine.board[r][c].type === 'P' && (r===0||r===15||c===0||c===15)) engine.board[r][c].type = 'G';
+                const next = (engine.turn + 1) % 4;
+                db.update({ board: engine.board, turn: next, kingsAlive: engine.kingsAlive, turnStartedAt: firebase.database.ServerValue.TIMESTAMP });
+                selectedSq = null; validMoves = [];
+            } else if(d.player === engine.turn && MY_ID === engine.turn) {
+                selectedSq = {r, c}; validMoves = engine.getMoves(r, c, engine.board);
+            } else { selectedSq = null; validMoves = []; }
+            renderAll();
+        };
+        bEl.appendChild(div);
     }
-    document.getElementById('score-a-val').innerText = sA;
-    document.getElementById('score-b-val').innerText = sB;
-    const totalP = sA + sB || 1;
-    document.getElementById('bar-a').style.width = `${(sA / totalP) * 100}%`;
-
-    // CARDS
+    document.getElementById('score-a-val').innerText = sA; document.getElementById('score-b-val').innerText = sB;
+    document.getElementById('bar-a').style.width = `${(sA / (sA + sB || 1)) * 100}%`;
     for(let i=0; i<4; i++) {
         const el = document.getElementById(`p${i}-card`);
         el.className = `p-2 rounded-lg border-b-4 transition-all ${engine.turn === i ? 'border-white bg-slate-700 shadow-lg' : 'border-slate-800 bg-slate-900/50'}`;
         el.style.opacity = engine.kingsAlive[i] ? '1' : '0.2';
     }
-
-    // TABULEIRO
-    for(let r=0; r<16; r++) for(let c=0; c<16; c++) {
-        const d = engine.board[r][c];
-        const div = document.createElement('div');
-        div.className = `cell-size flex items-center justify-center cursor-pointer transition-colors ${(r+c)%2===0?'bg-[#cbd5e1]':'bg-[#475569]'} ${d.void?'invisible pointer-events-none':''}`;
-        if(d.type) {
-            const span = document.createElement('span');
-            span.className = `piece text-xl md:text-2xl p${d.player}-color font-bold`;
-            span.innerText = PIECE_ICONS[d.type];
-            div.appendChild(span);
-        }
-        if(selectedSq?.r === r && selectedSq?.c === c) div.classList.add('bg-blue-300');
-        if(aiSuggestion && ((aiSuggestion.from.r === r && aiSuggestion.from.c === c) || (aiSuggestion.to.r === r && aiSuggestion.to.c === c))) div.classList.add('ai-hint');
-
-        const moveMarker = validMoves.find(m => m.r === r && m.c === c);
-        if(moveMarker) {
-            const h = document.createElement('div');
-            h.className = d.type ? 'absolute inset-0 bg-red-500/30' : 'w-3 h-3 bg-blue-500/40 rounded-full';
-            div.appendChild(h);
-        }
-
-        div.onclick = () => {
-            const move = validMoves.find(m => m.r === r && m.c === c);
-            if(move) {
-                // EXECUTAR MOVIMENTO
-                if(engine.board[r][c].type === 'K') engine.kingsAlive[engine.board[r][c].player] = false;
-                engine.board[r][c] = {...engine.board[selectedSq.r][selectedSq.c], firstMove: false};
-                engine.board[selectedSq.r][selectedSq.c] = {type:null, player:null, void:false};
-                if(engine.board[r][c].type === 'P' && (r===0||r===15||c===0||c===15)) engine.board[r][c].type = 'G';
-                
-                // ATUALIZAR FIREBASE COM TABULEIRO E TURNO
-                const n = (engine.turn + 1) % 4;
-                let next = n;
-                while(!engine.kingsAlive[next] && engine.kingsAlive.some((k,i)=>i%2===next%2&&k)) next = (next+1)%4;
-                
-                db.update({ 
-                    board: engine.board, 
-                    turn: next, 
-                    kingsAlive: engine.kingsAlive, 
-                    turnStartedAt: firebase.database.ServerValue.TIMESTAMP 
-                });
-                
-                selectedSq = null; validMoves = [];
-            } else if(d.player === engine.turn && MY_ID === engine.turn) {
-                // SELECIONAR PEÇA
-                selectedSq = {r, c};
-                validMoves = engine.getMoves(r, c, engine.board);
-            } else {
-                selectedSq = null; validMoves = [];
-            }
-            drawBoard();
-        };
-        bEl.appendChild(div);
-    }
 }
 
 function switchChat(type) {
     activeChat = type;
-    document.getElementById('tab-team').className = `flex-1 py-3 text-[10px] font-black uppercase transition-all ${type === 'team' ? 'text-white border-b-2 border-blue-500' : 'text-slate-500'}`;
-    document.getElementById('tab-global').className = `flex-1 py-3 text-[10px] font-black uppercase transition-all ${type === 'global' ? 'text-white border-b-2 border-blue-500' : 'text-slate-500'}`;
+    document.getElementById('tab-team').className = `flex-1 py-3 text-[10px] font-black uppercase rounded-lg transition-all ${type === 'team' ? 'text-white border-b-2 border-blue-500 bg-slate-800' : 'text-slate-500'}`;
+    document.getElementById('tab-global').className = `flex-1 py-3 text-[10px] font-black uppercase rounded-lg transition-all ${type === 'global' ? 'text-white border-b-2 border-blue-500 bg-slate-800' : 'text-slate-500'}`;
     document.getElementById('chat-messages').innerHTML = "";
     const path = activeChat === 'team' ? `chats/${MY_TEAM}` : 'chats/global';
-    db.child(path).off(); db.child(path).limitToLast(15).on('child_added', snap => {
+    db.child(path).off(); db.child(path).limitToLast(20).on('child_added', snap => {
         const d = snap.val(); const colors = ['text-red-400','text-green-400','text-amber-400','text-blue-400'];
         document.getElementById('chat-messages').innerHTML += `<div><b class="${colors[d.player]}">P${d.player+1}:</b> <span class="text-slate-200">${d.msg}</span></div>`;
         document.getElementById('chat-messages').scrollTop = 9999;
@@ -360,7 +330,7 @@ db.on('value', snap => {
     if(d && d.board) { 
         engine.board=d.board; engine.turn=d.turn; engine.kingsAlive=d.kingsAlive; 
         turnStartedAt = d.turnStartedAt || Date.now();
-        if(MY_ID !== null) drawBoard(); 
+        if(MY_ID !== null) renderAll(); 
     } else resetOnlineGame();
 });
 </script>
