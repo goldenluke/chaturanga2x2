@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eternal Citadel 16x16 - Oracle Edition</title>
+    <title>Eternal Citadel 16x16 - Ironclad Stable</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
@@ -25,7 +25,7 @@
     <!-- Seletor de Jogador -->
     <div id="player-selector" class="fixed inset-0 bg-black/98 z-[1000] flex flex-col items-center justify-center p-4 text-center">
         <h1 class="text-3xl font-black mb-2 text-blue-500 italic uppercase tracking-tighter">ETERNAL CITADEL</h1>
-        <p class="text-slate-400 mb-8 text-sm font-bold tracking-widest">SISTEMA ONLINE DE EQUIPES 2x2</p>
+        <p class="text-slate-400 mb-8 text-sm font-bold tracking-widest uppercase">Equipes 2x2 • Tabuleiro 16x16</p>
         <div class="flex flex-col gap-4 w-full max-w-xs">
             <button class="w-full py-4 rounded-xl font-bold bg-red-500 shadow-lg active:scale-95 transition" onclick="setMyRole(0)">P1: NORTE (VERMELHO)</button>
             <button class="w-full py-4 rounded-xl font-bold bg-green-500 shadow-lg active:scale-95 transition" onclick="setMyRole(1)">P2: LESTE (VERDE)</button>
@@ -37,19 +37,19 @@
     <!-- Interface Principal -->
     <div id="game-container" class="hidden flex flex-col items-center w-full animate-in fade-in duration-700">
         
-        <!-- Barra de Pontuação Team A vs B -->
+        <!-- Barra de Pontuação -->
         <div class="w-full max-w-[690px] mb-4 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
             <div class="flex justify-between text-[10px] font-black uppercase mb-1 tracking-widest">
-                <span class="text-red-400">Time A (N/S): <span id="score-a">0</span></span>
-                <span class="text-green-400">Time B (E/W): <span id="score-b">0</span></span>
+                <span class="text-red-400">Team A (N/S): <span id="score-a-val">0</span></span>
+                <span class="text-green-400">Team B (E/W): <span id="score-b-val">0</span></span>
             </div>
             <div class="h-3 bg-slate-800 rounded-full overflow-hidden flex border border-slate-700">
-                <div id="bar-a" class="h-full bg-red-500 transition-all duration-700" style="width: 50%"></div>
-                <div id="bar-b" class="h-full bg-green-500 transition-all duration-700 w-full"></div>
+                <div id="bar-a" class="h-full bg-red-500 transition-all duration-1000" style="width: 50%"></div>
+                <div id="bar-b" class="h-full bg-green-500 transition-all duration-1000 w-full"></div>
             </div>
         </div>
 
-        <!-- Timers de 120s -->
+        <!-- Timers -->
         <div class="grid grid-cols-4 gap-2 w-full max-w-[690px] mb-4">
             <div id="p0-card" class="bg-slate-800/50 p-2 rounded-lg border-b-4 border-slate-700 text-center">
                 <span class="text-[9px] text-slate-500 font-bold uppercase">Norte</span>
@@ -70,7 +70,7 @@
         </div>
 
         <!-- Tabuleiro -->
-        <div class="flex flex-col items-center bg-slate-900 p-2 md:p-3 rounded-2xl border border-slate-800 shadow-2xl">
+        <div class="flex flex-col items-center bg-slate-900 p-2 md:p-3 rounded-2xl border border-slate-800 shadow-2xl relative">
             <div id="coords-top" class="grid grid-cols-[repeat(16,minmax(0,1fr))] px-5 w-full h-5 text-[10px] font-bold text-slate-600"></div>
             <div class="flex items-center">
                 <div id="coords-left" class="grid grid-rows-[repeat(16,minmax(0,1fr))] h-full w-5 text-[10px] font-bold text-slate-600 text-center"></div>
@@ -83,7 +83,7 @@
         <!-- Botões -->
         <div class="flex gap-2 w-full max-w-[650px] mt-4">
             <button onclick="engine.aiSuggest()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold text-xs uppercase transition shadow-lg shadow-blue-500/20">Dica IA (Broadcast)</button>
-            <button onclick="resetOnlineGame()" class="flex-1 bg-slate-800 hover:bg-red-900/40 text-slate-400 py-3 rounded-xl font-bold text-xs border border-slate-700 uppercase">Reiniciar Partida</button>
+            <button onclick="resetOnlineGame()" class="flex-1 bg-slate-800 hover:bg-red-900/40 text-slate-400 py-3 rounded-xl font-bold text-xs border border-slate-700 uppercase">Resetar Partida</button>
         </div>
 
         <!-- Chats -->
@@ -99,17 +99,17 @@
             </div>
         </div>
 
-        <!-- MANUAL DE PEÇAS -->
+        <!-- Manual -->
         <div class="w-full max-w-[650px] grid grid-cols-2 gap-4 mt-6 p-4 bg-slate-900/80 rounded-2xl text-[10px] text-slate-400 border border-slate-800 shadow-xl mb-10">
             <div class="space-y-4">
-                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">🐉 Dragão (D)</b> Move como Cavalo OU desliza 2 casas retas. É bloqueado por peças no deslizamento.</p>
-                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">⚔️ General (G)</b> Move como Rei OU desliza 2 casas (todas direções). Não pula peças. Defesa suprema.</p>
+                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">🐉 Dragão (D)</b> Move como Cavalo OU desliza 2 casas retas. É bloqueado por peças no caminho.</p>
+                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">⚔️ General (G)</b> Move como Rei OU desliza 2 casas. Não pula peças. Defesa suprema.</p>
                 <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">🦅 Falcão (F)</b> Move como Bispo, mas limitado ao alcance máximo de 4 casas.</p>
             </div>
             <div class="space-y-4">
-                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">🔥 Fênix (X)</b> Desliza exatamente 2 casas na diagonal. Não pode pular obstáculos.</p>
-                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">🐘 Elefante (E)</b> Salta exatamente 2 casas na diagonal. Ignora bloqueios (pula peças).</p>
-                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">♟️ Peão (P)</b> Avança 2 casas no 1º lance. Promove a General ao cruzar o mapa.</p>
+                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">🔥 Fênix (X)</b> Desliza exatamente 2 casas na diagonal. Não pula obstáculos.</p>
+                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">🐘 Elefante (E)</b> Salta exatas 2 casas na diagonal. Pula peças.</p>
+                <p><b class="text-blue-400 block uppercase tracking-widest text-[9px]">♟️ Peão (P)</b> Avança 2 casas no 1º lance. Promove a General.</p>
             </div>
         </div>
     </div>
@@ -129,10 +129,11 @@ const firebaseConfig = {
     appId: "1:735568669929:web:b5faa11547954fb8051478"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database().ref("oracle_citadel_120s_v30");
+const db = firebase.database().ref("citadel_stable_v33");
 
 const TURN_TIME = 120;
 let MY_ID = null, MY_TEAM = null, turnStartedAt = 0, activeChat = 'team', aiSuggestion = null;
+let selectedSq = null, validMoves = [];
 
 function setMyRole(id) {
     MY_ID = id;
@@ -161,7 +162,7 @@ setInterval(() => {
 
 /** ENGINE **/
 const PIECE_ICONS = { 'R':'♜', 'N':'♞', 'E':'🐘', 'F':'🦅', 'D':'🐉', 'X':'🔥', 'G':'⚔️', 'K':'♚', 'P':'♟' };
-const PIECE_VALS = { 'P':10, 'N':30, 'E':25, 'F':35, 'D':60, 'X':40, 'G':70, 'R':50, 'K':1000 };
+const PIECE_VALS = { 'P':10, 'N':30, 'E':25, 'F':35, 'D':60, 'X':45, 'G':65, 'R':50, 'K':1000 };
 
 class ChaturangaEngine {
     constructor() { this.dim = 16; this.board = []; this.turn = 0; this.kingsAlive = [true,true,true,true]; }
@@ -238,14 +239,13 @@ class ChaturangaEngine {
         }
         if(best) {
             aiSuggestion = best; drawBoard();
-            db.child('chats/global').push({ player: MY_ID, msg: "🧠 USOU A DICA DO ORÁCULO IA!" });
+            db.child('chats/global').push({ player: MY_ID, msg: "🤖 USOU A DICA DA IA! 🧠" });
             setTimeout(() => { aiSuggestion = null; drawBoard(); }, 4000);
         }
     }
 }
 
 const engine = new ChaturangaEngine();
-let selected = null, validMoves = [];
 
 function drawBoard() {
     const letters = "ABCDEFGHIJKLMNOP".split("");
@@ -254,10 +254,31 @@ function drawBoard() {
     document.getElementById('coords-left').innerHTML = document.getElementById('coords-right').innerHTML = nums;
 
     const bEl = document.getElementById('board'); bEl.innerHTML = '';
+    
+    // SCORE (FIXED: Filter nulls properly)
     let sA=0, sB=0;
     for(let r=0; r<16; r++) for(let c=0; c<16; c++) {
         const d = engine.board[r][c];
-        if(d.type) { if(d.player%2===0) sA+=PIECE_VALS[d.type]; else sB+=PIECE_VALS[d.type]; }
+        if(d && d.type && d.player !== null) { 
+            if(d.player === 0 || d.player === 2) sA += PIECE_VALS[d.type]; 
+            else sB += PIECE_VALS[d.type]; 
+        }
+    }
+    document.getElementById('score-a-val').innerText = sA;
+    document.getElementById('score-b-val').innerText = sB;
+    const totalP = sA + sB || 1;
+    document.getElementById('bar-a').style.width = `${(sA / totalP) * 100}%`;
+
+    // CARDS
+    for(let i=0; i<4; i++) {
+        const el = document.getElementById(`p${i}-card`);
+        el.className = `p-2 rounded-lg border-b-4 transition-all ${engine.turn === i ? 'border-white bg-slate-700 shadow-lg' : 'border-slate-800 bg-slate-900/50'}`;
+        el.style.opacity = engine.kingsAlive[i] ? '1' : '0.2';
+    }
+
+    // TABULEIRO
+    for(let r=0; r<16; r++) for(let c=0; c<16; c++) {
+        const d = engine.board[r][c];
         const div = document.createElement('div');
         div.className = `cell-size flex items-center justify-center cursor-pointer transition-colors ${(r+c)%2===0?'bg-[#cbd5e1]':'bg-[#475569]'} ${d.void?'invisible pointer-events-none':''}`;
         if(d.type) {
@@ -266,38 +287,51 @@ function drawBoard() {
             span.innerText = PIECE_ICONS[d.type];
             div.appendChild(span);
         }
-        if(selected?.r === r && selected?.c === c) div.classList.add('bg-blue-300');
+        if(selectedSq?.r === r && selectedSq?.c === c) div.classList.add('bg-blue-300');
         if(aiSuggestion && ((aiSuggestion.from.r === r && aiSuggestion.from.c === c) || (aiSuggestion.to.r === r && aiSuggestion.to.c === c))) div.classList.add('ai-hint');
-        const mv = validMoves.find(m => m.r === r && m.c === c);
-        if(mv) {
+
+        const moveMarker = validMoves.find(m => m.r === r && m.c === c);
+        if(moveMarker) {
             const h = document.createElement('div');
             h.className = d.type ? 'absolute inset-0 bg-red-500/30' : 'w-3 h-3 bg-blue-500/40 rounded-full';
             div.appendChild(h);
         }
+
         div.onclick = () => {
-            if(mv) {
+            const move = validMoves.find(m => m.r === r && m.c === c);
+            if(move) {
+                // EXECUTAR MOVIMENTO
                 if(engine.board[r][c].type === 'K') engine.kingsAlive[engine.board[r][c].player] = false;
-                engine.board[r][c] = {...engine.board[selected.r][selected.c], firstMove: false};
-                engine.board[selected.r][selected.c] = {type:null, player:null, void:false};
+                engine.board[r][c] = {...engine.board[selectedSq.r][selectedSq.c], firstMove: false};
+                engine.board[selectedSq.r][selectedSq.c] = {type:null, player:null, void:false};
                 if(engine.board[r][c].type === 'P' && (r===0||r===15||c===0||c===15)) engine.board[r][c].type = 'G';
-                engine.passTurn(); selected = null; validMoves = [];
+                
+                // ATUALIZAR FIREBASE COM TABULEIRO E TURNO
+                const n = (engine.turn + 1) % 4;
+                let next = n;
+                while(!engine.kingsAlive[next] && engine.kingsAlive.some((k,i)=>i%2===next%2&&k)) next = (next+1)%4;
+                
+                db.update({ 
+                    board: engine.board, 
+                    turn: next, 
+                    kingsAlive: engine.kingsAlive, 
+                    turnStartedAt: firebase.database.ServerValue.TIMESTAMP 
+                });
+                
+                selectedSq = null; validMoves = [];
             } else if(d.player === engine.turn && MY_ID === engine.turn) {
-                selected = {r, c}; validMoves = engine.getMoves(r, c, engine.board);
-            } else { selected = null; validMoves = []; }
+                // SELECIONAR PEÇA
+                selectedSq = {r, c};
+                validMoves = engine.getMoves(r, c, engine.board);
+            } else {
+                selectedSq = null; validMoves = [];
+            }
             drawBoard();
         };
         bEl.appendChild(div);
     }
-    document.getElementById('score-a').innerText = sA; document.getElementById('score-b').innerText = sB;
-    document.getElementById('bar-a').style.width = `${(sA / (sA + sB || 1)) * 100}%`;
-    for(let i=0; i<4; i++) {
-        const el = document.getElementById(`p${i}-card`);
-        el.className = `p-2 rounded-lg border-b-4 transition-all ${engine.turn === i ? 'border-white bg-slate-700 shadow-lg' : 'border-slate-800 bg-slate-900/50'}`;
-        el.style.opacity = engine.kingsAlive[i] ? '1' : '0.2';
-    }
 }
 
-/** CHAT **/
 function switchChat(type) {
     activeChat = type;
     document.getElementById('tab-team').className = `flex-1 py-3 text-[10px] font-black uppercase transition-all ${type === 'team' ? 'text-white border-b-2 border-blue-500' : 'text-slate-500'}`;
