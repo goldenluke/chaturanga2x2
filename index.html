@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chaturanga 16x16 - Eternal Citadel</title>
+    <title>Chaturanga 16x16 - Dual Chat Edition</title>
     <style>
         :root {
             --bg: #020617; --card: #1e293b;
@@ -23,38 +23,28 @@
         }
         .sel-btn { width: 240px; padding: 15px; margin: 8px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; }
 
-        /* Barra de Pontuação Team A vs Team B */
+        /* Pontuação e Clocks */
         .score-container { width: 100%; max-width: 690px; margin-bottom: 10px; }
         .score-labels { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-bottom: 4px; }
         .score-bar { height: 12px; background: #334155; border-radius: 6px; overflow: hidden; display: flex; border: 1px solid #475569; }
         #bar-a { background: linear-gradient(to right, var(--c0), var(--c2)); width: 50%; transition: 0.8s ease; }
         #bar-b { background: linear-gradient(to right, var(--c1), var(--c3)); width: 50%; transition: 0.8s ease; }
 
-        /* Estrutura do Tabuleiro e Coordenadas */
+        .players-grid { display: grid; grid-template-columns: repeat(4, 1fr); width: 100%; max-width: 690px; gap: 5px; margin-bottom: 10px; }
+        .stat-card { background: var(--card); padding: 8px; border-radius: 4px; border-bottom: 3px solid #444; font-size: 10px; text-align: center; }
+        .active-p { border-bottom-color: #fff !important; background: #334155; }
+        .clock { font-family: monospace; font-size: 14px; font-weight: bold; margin-top: 3px; }
+        .low-time { color: #f87171; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+
+        /* Grid Tabuleiro */
         .game-area { display: flex; flex-direction: column; align-items: center; }
-        .row-coords { 
-            display: grid; 
-            grid-template-columns: repeat(16, var(--cell-size)); 
-            height: 20px;
-            margin-left: 20px; 
-            margin-right: 20px; 
-        }
+        .row-coords { display: grid; grid-template-columns: repeat(16, var(--cell-size)); height: 20px; margin: 0 20px; }
         .middle-row { display: flex; align-items: center; }
-        .col-coords { 
-            display: grid; 
-            grid-template-rows: repeat(16, var(--cell-size)); 
-            width: 20px; 
-        }
+        .col-coords { display: grid; grid-template-rows: repeat(16, var(--cell-size)); width: 20px; }
+        .label { font-size: 10px; font-weight: 800; color: #64748b; display: flex; align-items: center; justify-content: center; }
 
-        .label { font-size: 10px; font-weight: 800; color: #64748b; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
-
-        #board { 
-            display: grid; 
-            grid-template-columns: repeat(16, var(--cell-size)); 
-            grid-template-rows: repeat(16, var(--cell-size)); 
-            background: #0f172a; border: 2px solid #334155;
-        }
-
+        #board { display: grid; grid-template-columns: repeat(16, var(--cell-size)); grid-template-rows: repeat(16, var(--cell-size)); background: #0f172a; border: 2px solid #334155; }
         .cell { width: var(--cell-size); height: var(--cell-size); display: flex; justify-content: center; align-items: center; font-size: calc(var(--cell-size) * 0.7); cursor: pointer; }
         .l { background: var(--tile-l); } .d { background: var(--tile-d); }
         .void { visibility: hidden; pointer-events: none; }
@@ -64,33 +54,36 @@
         .p1 .piece { color: var(--c1); text-shadow: 0 0 8px var(--c1); }
         .p2 .piece { color: var(--c2); text-shadow: 0 0 8px var(--c2); }
         .p3 .piece { color: var(--c3); text-shadow: 0 0 8px var(--c3); }
-
         .selected { background: #94a3b8 !important; box-shadow: inset 0 0 10px black; }
         .hint { background: rgba(74, 222, 128, 0.3) !important; border-radius: 50%; background-clip: content-box; padding: 10px; }
         .hint-cap { background: rgba(248, 113, 113, 0.4) !important; }
 
-        /* Chat e Painéis */
-        #chat-container { width: 100%; max-width: 690px; background: var(--card); border-radius: 8px; margin-top: 15px; border: 1px solid #334155; overflow: hidden; }
-        #chat-messages { height: 80px; overflow-y: auto; padding: 10px; font-size: 12px; background: #020617; }
+        /* Sistema de Chat Duplo */
+        #chat-container { width: 100%; max-width: 690px; background: var(--card); border-radius: 8px; margin-top: 10px; border: 1px solid #334155; overflow: hidden; }
+        .chat-tabs { display: flex; background: #0f172a; border-bottom: 1px solid #334155; }
+        .chat-tab { flex: 1; padding: 10px; border: none; background: none; color: #64748b; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .chat-tab.active { color: #fff; background: var(--card); border-bottom: 2px solid #3b82f6; }
+        
+        #chat-messages { height: 100px; overflow-y: auto; padding: 10px; font-size: 12px; background: #020617; }
         #chat-input-area { display: flex; padding: 8px; background: var(--card); }
         #chat-input { flex: 1; background: #0f172a; border: 1px solid #334155; color: white; padding: 10px; border-radius: 4px; }
-        
-        .players-grid { display: grid; grid-template-columns: repeat(4, 1fr); width: 100%; max-width: 690px; gap: 5px; margin-top: 10px; }
-        .stat-card { background: var(--card); padding: 8px; border-radius: 4px; border-bottom: 3px solid #444; font-size: 10px; text-align: center; }
-        .active-p { border-bottom-color: #fff !important; background: #334155; }
-        
+
+        /* Manual */
+        .manual-container { width: 100%; max-width: 690px; background: #111827; border-radius: 8px; padding: 15px; margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; border: 1px solid #1e293b; }
+        .manual-item { font-size: 11px; line-height: 1.4; color: #94a3b8; }
+        .manual-item b { color: #fff; display: block; margin-bottom: 2px; }
+
         #log { font-size: 11px; color: #94a3b8; margin: 10px; text-align: center; }
     </style>
 </head>
 <body>
 
     <div id="player-selector">
-        <h2 style="margin-bottom: 10px;">Eternal Citadel 16x16</h2>
-        <p style="color:#94a3b8; margin-bottom:20px;">Selecione sua posição na mesa:</p>
-        <button class="sel-btn" style="background:var(--c0)" onclick="setMyRole(0)">P1: NORTE (Vermelho)</button>
-        <button class="sel-btn" style="background:var(--c1)" onclick="setMyRole(1)">P2: LESTE (Verde)</button>
-        <button class="sel-btn" style="background:var(--c2)" onclick="setMyRole(2)">P3: SUL (Amarelo)</button>
-        <button class="sel-btn" style="background:var(--c3)" onclick="setMyRole(3)">P4: OESTE (Azul)</button>
+        <h2 style="margin-bottom: 20px;">Eternal Citadel 16x16</h2>
+        <button class="sel-btn" style="background:var(--c0)" onclick="setMyRole(0)">P1: NORTE</button>
+        <button class="sel-btn" style="background:var(--c1)" onclick="setMyRole(1)">P2: LESTE</button>
+        <button class="sel-btn" style="background:var(--c2)" onclick="setMyRole(2)">P3: SUL</button>
+        <button class="sel-btn" style="background:var(--c3)" onclick="setMyRole(3)">P4: OESTE</button>
     </div>
 
     <div class="score-container">
@@ -99,6 +92,13 @@
             <span style="color:var(--c1)">TIME B (E/W): <span id="val-b">0</span></span>
         </div>
         <div class="score-bar"><div id="bar-a"></div><div id="bar-b"></div></div>
+    </div>
+
+    <div class="players-grid">
+        <div id="p0-card" class="stat-card">NORTE <div id="clock-0" class="clock">01:00</div></div>
+        <div id="p1-card" class="stat-card">LESTE <div id="clock-1" class="clock">01:00</div></div>
+        <div id="p2-card" class="stat-card">SUL <div id="clock-2" class="clock">01:00</div></div>
+        <div id="p3-card" class="stat-card">OESTE <div id="clock-3" class="clock">01:00</div></div>
     </div>
 
     <div class="game-area">
@@ -111,23 +111,37 @@
         <div class="row-coords" id="coords-bottom"></div>
     </div>
 
-    <div class="players-grid">
-        <div id="p0-card" class="stat-card">NORTE</div>
-        <div id="p1-card" class="stat-card">LESTE</div>
-        <div id="p2-card" class="stat-card">SUL</div>
-        <div id="p3-card" class="stat-card">OESTE</div>
-    </div>
-
     <div id="chat-container">
+        <div class="chat-tabs">
+            <button id="tab-team" class="chat-tab active" onclick="switchChat('team')">Chat do Time</button>
+            <button id="tab-global" class="chat-tab" onclick="switchChat('global')">Chat Global</button>
+        </div>
         <div id="chat-messages"></div>
         <div id="chat-input-area">
-            <input type="text" id="chat-input" placeholder="Chat Privado de Equipe...">
-            <button onclick="sendChatMessage()" style="margin-left:5px; padding:0 15px; background:#3b82f6; border:none; color:white; border-radius:4px; cursor:pointer;">Enviar</button>
+            <input type="text" id="chat-input" placeholder="Mensagem...">
+            <button onclick="sendChatMessage()" style="margin-left:5px; padding:0 15px; background:#3b82f6; border:none; color:white; border-radius:4px; cursor:pointer;">OK</button>
+        </div>
+    </div>
+
+    <div class="manual-container">
+        <div class="manual-item">
+            <b>🐉 DRAGÃO (D)</b> Cavalo + Desliza 2 casas retas.
+            <br><br>
+            <b>⚔️ GENERAL (G)</b> Rei + Desliza 2 casas. Promoção.
+            <br><br>
+            <b>🦅 FALCÃO (F)</b> Bispo (Desliza máx. 4 casas).
+        </div>
+        <div class="manual-item">
+            <b>🔥 FÊNIX (X)</b> Desliza exatamente 2 casas diag.
+            <br><br>
+            <b>🐘 ELEFANTE (E)</b> Salta 2 casas diag. (Pula peças).
+            <br><br>
+            <b>♟️ PEÃO (P)</b> Avança 2 no 1º lance. Vira General.
         </div>
     </div>
 
     <div id="log">Status: Sincronizando...</div>
-    <button onclick="resetOnlineGame()" style="background:none; border:none; color:#450a0a; font-size:10px; margin-top:20px; cursor:pointer; font-weight:bold;">REINICIAR PARTIDA GLOBAL</button>
+    <button onclick="resetOnlineGame()" style="background:none; border:none; color:#450a0a; font-size:10px; margin-top:10px; cursor:pointer; font-weight:bold;">REINICIAR PARTIDA</button>
 
 <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
@@ -144,97 +158,119 @@ const firebaseConfig = {
     appId: "1:735568669929:web:b5faa11547954fb8051478"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database().ref("final_precision_v16");
+const db = firebase.database().ref("citadel_dualchat_v19");
 
 let MY_ID = null;
 let MY_TEAM = null;
+let activeChat = 'team'; // 'team' ou 'global'
+let clocks = [60, 60, 60, 60];
+let clockInterval = null;
 
 function setMyRole(id) {
     MY_ID = id;
     MY_TEAM = (id === 0 || id === 2) ? 'teamA' : 'teamB';
     document.getElementById('player-selector').style.display = 'none';
-    initChat();
+    initChats();
     drawBoard();
 }
 
-/** COORDENADAS **/
-function updateCoordsUI() {
-    const letters = "ABCDEFGHIJKLMNOP".split("");
-    const top = document.getElementById('coords-top');
-    const bottom = document.getElementById('coords-bottom');
-    const left = document.getElementById('coords-left');
-    const right = document.getElementById('coords-right');
-
-    top.innerHTML = bottom.innerHTML = letters.map(l => `<div class="label">${l}</div>`).join("");
-    let nums = "";
-    for(let i=16; i>=1; i--) nums += `<div class="label">${i}</div>`;
-    left.innerHTML = right.innerHTML = nums;
+/** CHAT LOGIC **/
+function switchChat(type) {
+    activeChat = type;
+    document.getElementById('tab-team').classList.toggle('active', type === 'team');
+    document.getElementById('tab-global').classList.toggle('active', type === 'global');
+    document.getElementById('chat-messages').innerHTML = "";
+    loadChatHistory();
 }
 
-/** ENGINE **/
+function loadChatHistory() {
+    const path = activeChat === 'team' ? `chats/${MY_TEAM}` : 'chats/global';
+    db.child(path).off(); // Limpa listeners anteriores
+    db.child(path).limitToLast(15).on('child_added', snap => {
+        const d = snap.val();
+        const colors = ['var(--c0)','var(--c1)','var(--c2)','var(--c3)'];
+        const msgList = document.getElementById('chat-messages');
+        msgList.innerHTML += `<div><b style="color:${colors[d.player]}">P${d.player+1}:</b> ${d.msg}</div>`;
+        msgList.scrollTop = 9999;
+    });
+}
+
+function initChats() {
+    loadChatHistory();
+}
+
+function sendChatMessage() {
+    const i = document.getElementById('chat-input');
+    if(!i.value.trim()) return;
+    const path = activeChat === 'team' ? `chats/${MY_TEAM}` : 'chats/global';
+    db.child(path).push({ player: MY_ID, msg: i.value });
+    i.value = "";
+}
+document.getElementById('chat-input').addEventListener('keypress', e => { if(e.key === 'Enter') sendChatMessage(); });
+
+/** RELÓGIOS **/
+function formatTime(sec) {
+    if (sec <= 0) return "00:00";
+    return `${Math.floor(sec/60).toString().padStart(2,'0')}:${(sec%60).toString().padStart(2,'0')}`;
+}
+function updateClocksUI() {
+    for(let i=0; i<4; i++) {
+        const el = document.getElementById(`clock-${i}`);
+        el.innerText = formatTime(clocks[i]);
+        el.classList.toggle('low-time', clocks[i] < 10);
+    }
+}
+function startClock() {
+    clearInterval(clockInterval);
+    clockInterval = setInterval(() => {
+        if (clocks[engine.turn] > 0) {
+            clocks[engine.turn] -= 1;
+            updateClocksUI();
+            if (MY_ID === engine.turn && clocks[engine.turn] % 3 === 0) db.child('clocks').set(clocks);
+        }
+    }, 1000);
+}
+
+/** ENGINE (16x16) **/
 const PIECE_ICONS = { 'R':'♜', 'N':'♞', 'E':'🐘', 'F':'🦅', 'D':'🐉', 'X':'🔥', 'G':'⚔️', 'K':'♚', 'P':'♟' };
 const PIECE_VALS = { 'P':10, 'N':30, 'E':25, 'F':35, 'D':55, 'X':40, 'G':65, 'R':50, 'K':1000 };
 
 class ChaturangaEngine {
-    constructor() {
-        this.dim = 16;
-        this.board = [];
-        this.turn = 0;
-        this.kingsAlive = [true, true, true, true];
-    }
-
+    constructor() { this.dim = 16; this.board = []; this.turn = 0; this.kingsAlive = [true,true,true,true]; }
     createBoard() {
         let b = [];
-        for (let r = 0; r < 16; r++) {
+        for(let r=0; r<16; r++) {
             b[r] = [];
-            for (let c = 0; c < 16; c++) {
-                const isVoid = (r < 3 || r > 12) && (c < 3 || c > 12);
-                b[r][c] = { type: null, player: null, void: isVoid, firstMove: true };
-            }
+            for(let c=0; c<16; c++) b[r][c] = { type: null, player: null, void: (r<3||r>12)&&(c<3||c>12), firstMove: true };
         }
         const layout = ['R','N','E','F','K','G','D','X','N','R'];
         for(let i=0; i<10; i++) {
-            this.setPiece(b, 0, i+3, layout[i], 0); this.setPiece(b, 1, i+3, 'P', 0); // Norte
-            this.setPiece(b, 15, i+3, layout[9-i], 2); this.setPiece(b, 14, i+3, 'P', 2); // Sul
-            this.setPiece(b, i+3, 15, layout[i], 1); this.setPiece(b, i+3, 14, 'P', 1); // Leste
-            this.setPiece(b, i+3, 0, layout[9-i], 3); this.setPiece(b, i+3, 1, 'P', 3); // Oeste
+            this.set(b,0,i+3,layout[i],0); this.set(b,1,i+3,'P',0);
+            this.set(b,15,i+3,layout[9-i],2); this.set(b,14,i+3,'P',2);
+            this.set(b,i+3,15,layout[i],1); this.set(b,i+3,14,'P',1);
+            this.set(b,i+3,0,layout[9-i],3); this.set(b,i+3,1,'P',3);
         }
         return b;
     }
-
-    setPiece(b, r, c, t, p) { if(t) b[r][c] = { type: t, player: p, void: false, firstMove: true }; }
-
+    set(b,r,c,t,p) { if(t) b[r][c] = { type: t, player: p, void: false, firstMove: true }; }
     getMoves(r, c, b) {
-        const p = b[r][c];
-        if(!p || !p.type) return [];
-        let m = [];
-        const ds = {
-            ortho: [[0,1],[0,-1],[1,0],[-1,0]],
-            diag: [[1,1],[1,-1],[-1,1],[-1,-1]],
-            knight: [[1,2],[1,-2],[-1,2],[-1,-2],[2,1],[2,-1],[-2,1],[-2,-1]],
-            j2D: [[2,2],[2,-2],[-2,2],[-2,-2]],
-            j2O: [[0,2],[0,-2],[2,0],[-2,0]]
-        };
-        const slide = (dirs, limit) => dirs.forEach(d => {
-            for(let i=1; i<=limit; i++) {
-                let nr = r+d[0]*i, nc = c+d[1]*i;
+        const p = b[r][c]; if(!p || !p.type) return [];
+        let m = []; const ds = { ortho:[[0,1],[0,-1],[1,0],[-1,0]], diag:[[1,1],[1,-1],[-1,1],[-1,-1]], knight:[[1,2],[1,-2],[-1,2],[-1,-2],[2,1],[2,-1],[-2,1],[-2,-1]] };
+        const slide = (dirs, lim) => dirs.forEach(d => {
+            for(let i=1; i<=lim; i++) {
+                let nr=r+d[0]*i, nc=c+d[1]*i;
                 if(nr<0||nr>=16||nc<0||nc>=16||b[nr][nc].void) break;
-                if(!b[nr][nc].type) { m.push({r: nr, c: nc}); } else {
-                    if(b[nr][nc].player%2 !== p.player%2) m.push({r: nr, c: nc});
-                    break;
-                }
+                if(!b[nr][nc].type) m.push({r:nr, c:nc});
+                else { if(b[nr][nc].player%2 !== p.player%2) m.push({r:nr, c:nc}); break; }
             }
         });
         const jump = (dirs) => dirs.forEach(d => {
-            let nr = r+d[0], nc = c+d[1];
-            if(nr>=0 && nr<16 && nc>=0 && nc<16 && !b[nr][nc].void) {
-                if(!b[nr][nc].type || b[nr][nc].player%2 !== p.player%2) m.push({r: nr, c: nc});
-            }
+            let nr=r+d[0], nc=c+d[1];
+            if(nr>=0 && nr<16 && nc>=0 && nc<16 && !b[nr][nc].void) { if(!b[nr][nc].type || b[nr][nc].player%2 !== p.player%2) m.push({r:nr, c:nc}); }
         });
-
         if(p.type==='R') slide(ds.ortho, 16);
         if(p.type==='N') jump(ds.knight);
-        if(p.type==='E') jump(ds.j2D);
+        if(p.type==='E') jump([[2,2],[2,-2],[-2,2],[-2,-2]]);
         if(p.type==='F') slide(ds.diag, 4);
         if(p.type==='T') slide(ds.ortho, 2);
         if(p.type==='X') slide(ds.diag, 2);
@@ -249,26 +285,11 @@ class ChaturangaEngine {
             }
             let caps = p.player%2===0 ? [[f[0],1], [f[0],-1]] : [[1,f[1]], [-1,f[1]]];
             caps.forEach(s => {
-                let nr = r+s[0], nc = c+s[1];
+                let nr=r+s[0], nc=c+s[1];
                 if(nr>=0&&nr<16&&nc>=0&&nc<16 && b[nr][nc].type && b[nr][nc].player%2 !== p.player%2) m.push({r: nr, c: nc});
             });
         }
         return m;
-    }
-
-    evaluate() {
-        let scoreA = 0, scoreB = 0;
-        for(let r=0; r<16; r++){
-            for(let c=0; c<16; c++){
-                let p = this.board[r][c];
-                if(p.type){
-                    let val = PIECE_VALS[p.type];
-                    if(p.player === 0 || p.player === 2) scoreA += val;
-                    else scoreB += val;
-                }
-            }
-        }
-        return {a: scoreA, b: scoreB};
     }
 }
 
@@ -276,85 +297,59 @@ const engine = new ChaturangaEngine();
 let selected = null, validMoves = [];
 
 function drawBoard() {
-    updateCoordsUI();
-    const bEl = document.getElementById('board'); bEl.innerHTML = '';
-    
-    // Atualizar Pontuação
-    const scores = engine.evaluate();
-    document.getElementById('val-a').innerText = scores.a;
-    document.getElementById('val-b').innerText = scores.b;
-    const total = scores.a + scores.b || 1;
-    document.getElementById('bar-a').style.width = `${(scores.a / total) * 100}%`;
+    const letters = "ABCDEFGHIJKLMNOP".split("");
+    document.getElementById('coords-top').innerHTML = document.getElementById('coords-bottom').innerHTML = letters.map(l => `<div class="label">${l}</div>`).join("");
+    let nums = ""; for(let i=16; i>=1; i--) nums += `<div class="label">${i}</div>`;
+    document.getElementById('coords-left').innerHTML = document.getElementById('coords-right').innerHTML = nums;
 
-    // Atualizar Status dos Jogadores
+    const bEl = document.getElementById('board'); bEl.innerHTML = '';
+    let sA=0, sB=0;
+    for(let r=0; r<16; r++) for(let c=0; c<16; c++) {
+        const d = engine.board[r][c];
+        if(d.type) { if(d.player%2===0) sA+=PIECE_VALS[d.type]; else sB+=PIECE_VALS[d.type]; }
+        const div = document.createElement('div');
+        div.className = `cell ${(r+c)%2===0?'l':'d'} ${d.void?'void':''} p${d.player}`;
+        if(d.type) div.innerHTML = `<span class="piece">${PIECE_ICONS[d.type]}</span>`;
+        if(selected?.r === r && selected?.c === c) div.classList.add('selected');
+        const mv = validMoves.find(m => m.r === r && m.c === c);
+        if(mv) div.classList.add(engine.board[r][c].type ? 'hint-cap' : 'hint');
+
+        div.onclick = () => {
+            if(mv) {
+                clocks[MY_ID] += 3;
+                if(engine.board[r][c].type === 'K') engine.kingsAlive[engine.board[r][c].player] = false;
+                engine.board[r][c] = {...engine.board[selected.r][selected.c], firstMove: false};
+                engine.board[selected.r][selected.c] = {type:null, player:null, void:false};
+                if(engine.board[r][c].type === 'P' && (r===0||r===15||c===0||c===15)) engine.board[r][c].type = 'G';
+                engine.turn = (engine.turn + 1) % 4;
+                while(!engine.kingsAlive[engine.turn] && engine.kingsAlive.some((k,i)=>i%2===engine.turn%2&&k)) engine.turn=(engine.turn+1)%4;
+                db.update({ board: engine.board, turn: engine.turn, kingsAlive: engine.kingsAlive, clocks: clocks });
+                selected = null; validMoves = [];
+            } else if(d.player === engine.turn && MY_ID === engine.turn) {
+                selected = {r, c}; validMoves = engine.getMoves(r, c, engine.board);
+            } else { selected = null; validMoves = []; }
+            drawBoard();
+        };
+        bEl.appendChild(div);
+    }
+    document.getElementById('val-a').innerText = sA; document.getElementById('val-b').innerText = sB;
+    document.getElementById('bar-a').style.width = `${(sA / (sA + sB || 1)) * 100}%`;
     for(let i=0; i<4; i++) {
         const el = document.getElementById(`p${i}-card`);
         el.className = `stat-card ${engine.turn === i ? 'active-p' : ''}`;
         el.style.opacity = engine.kingsAlive[i] ? '1' : '0.3';
     }
-
-    // Renderizar Células
-    for(let r=0; r<16; r++) {
-        for(let c=0; c<16; c++) {
-            const d = engine.board[r][c];
-            const div = document.createElement('div');
-            div.className = `cell ${(r+c)%2===0?'l':'d'} ${d.void?'void':''} p${d.player}`;
-            if(d.type) div.innerHTML = `<span class="piece">${PIECE_ICONS[d.type]}</span>`;
-            if(selected?.r === r && selected?.c === c) div.classList.add('selected');
-            const mv = validMoves.find(m => m.r === r && m.c === c);
-            if(mv) div.classList.add(engine.board[r][c].type ? 'hint-cap' : 'hint');
-
-            div.onclick = () => {
-                if(mv) {
-                    if(engine.board[r][c].type === 'K') engine.kingsAlive[engine.board[r][c].player] = false;
-                    engine.board[r][c] = {...engine.board[selected.r][selected.c], firstMove: false};
-                    engine.board[selected.r][selected.c] = {type:null, player:null, void:false};
-                    if(engine.board[r][c].type === 'P' && (r===0||r===15||c===0||c===15)) engine.board[r][c].type = 'G';
-                    
-                    engine.turn = (engine.turn + 1) % 4;
-                    while(!engine.kingsAlive[engine.turn] && engine.kingsAlive.some((k,i)=>i%2===engine.turn%2&&k)) engine.turn=(engine.turn+1)%4;
-                    
-                    db.update({ board: engine.board, turn: engine.turn, kingsAlive: engine.kingsAlive });
-                    selected = null; validMoves = [];
-                } else if(d.player === engine.turn && MY_ID === engine.turn) {
-                    selected = {r, c}; validMoves = engine.getMoves(r, c, engine.board);
-                } else { selected = null; validMoves = []; }
-                drawBoard();
-            };
-            bEl.appendChild(div);
-        }
-    }
+    updateClocksUI();
 }
 
-/** CHAT **/
-function initChat() {
-    const chatRef = db.child('chats').child(MY_TEAM);
-    chatRef.limitToLast(15).on('child_added', (snap) => {
-        const data = snap.val();
-        const msgList = document.getElementById('chat-messages');
-        const colors = ['var(--c0)','var(--c1)','var(--c2)','var(--c3)'];
-        msgList.innerHTML += `<div><b style="color:${colors[data.player]}">P${data.player+1}:</b> ${data.msg}</div>`;
-        msgList.scrollTop = msgList.scrollHeight;
-    });
-}
-function sendChatMessage() {
-    const input = document.getElementById('chat-input');
-    if(!input.value.trim() || MY_TEAM === null) return;
-    db.child('chats').child(MY_TEAM).push({ player: MY_ID, msg: input.value });
-    input.value = "";
-}
+function resetOnlineGame() { db.set({ board: engine.createBoard(), turn: 0, kingsAlive: [true,true,true,true], clocks: [60,60,60,60], chats: {teamA:{}, teamB:{}, global:{}} }); }
 
-// Enter envia chat
-document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChatMessage(); });
-
-function resetOnlineGame() { db.set({ board: engine.createBoard(), turn: 0, kingsAlive: [true,true,true,true], chats: {teamA:{}, teamB:{}} }); }
-
-db.on('value', (s) => { 
-    const d = s.val(); 
+db.on('value', snap => { 
+    const d = snap.val(); 
     if(d && d.board) { 
-        engine.board=d.board; engine.turn=d.turn; engine.kingsAlive=d.kingsAlive; 
-        if(MY_ID !== null) drawBoard(); 
-        document.getElementById('log').innerText="Status: Online e Sincronizado"; 
+        engine.board=d.board; engine.turn=d.turn; engine.kingsAlive=d.kingsAlive; clocks = d.clocks || [60,60,60,60];
+        startClock(); if(MY_ID !== null) drawBoard(); 
+        document.getElementById('log').innerText="Conectado"; 
     } else resetOnlineGame(); 
 });
 </script>
